@@ -385,10 +385,7 @@ async function fetchAPI<T>(
     // AuthProvider will route to /login on next mount, and individual pages
     // can decide how to handle the throw locally.
     if (response.status === 401) {
-      const isGuest = localStorage.getItem('raven_guest_mode') === 'true';
-      if (!isGuest) {
-        clearToken();
-      }
+      clearToken();
       const err = new Error('Unauthorized') as Error & { status?: number };
       err.status = 401;
       throw err;

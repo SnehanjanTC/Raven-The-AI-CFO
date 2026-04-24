@@ -27,7 +27,7 @@ type Tab = 'profile' | 'ai' | 'data';
 const ANTHROPIC_KEY_STORAGE = 'raven_anthropic_key';
 
 export function Settings() {
-  const { user, isGuest, signOut } = useAuth();
+  const { user, signOut } = useAuth();
   const [tab, setTab] = useState<Tab>('profile');
 
   return (
@@ -47,7 +47,7 @@ export function Settings() {
         </nav>
 
         <section className="flex-1 min-w-0">
-          {tab === 'profile' && <ProfilePanel user={user} isGuest={isGuest} signOut={signOut} />}
+          {tab === 'profile' && <ProfilePanel user={user} signOut={signOut} />}
           {tab === 'ai' && <AIKeyPanel />}
           {tab === 'data' && <DataPanel />}
         </section>
@@ -105,26 +105,35 @@ function Field({ label, value }: { label: string; value: React.ReactNode }) {
   );
 }
 
-function ProfilePanel({ user, isGuest, signOut }: { user: any; isGuest: boolean; signOut: () => Promise<void> }) {
+function ProfilePanel({ user, signOut }: { user: any; signOut: () => Promise<void> }) {
   const initials = (() => {
-    const name = user?.full_name || user?.email || (isGuest ? 'Guest' : 'U');
+    const name = user?.full_name || user?.email || 'U';
     const parts = name.split(/[\s@]/);
     return (parts[0]?.[0] + (parts[1]?.[0] || '')).toUpperCase();
   })();
+
+  const providerLabel = user?.provider === 'google' ? 'Google'
+    : user?.provider === 'azure' ? 'Microsoft'
+    : user?.provider === 'email' ? 'Email & password'
+    : '—';
 
   return (
     <>
       <Card title="Account" description="Your signed-in identity and session details.">
         <div className="flex items-center gap-4 mb-4">
-          <div className="h-14 w-14 rounded-full bg-gradient-to-br from-[#00F0A0] to-[#00CC88] flex items-center justify-center text-base font-semibold text-black">
-            {initials}
-          </div>
+          {user?.avatar_url ? (
+            <img src={user.avatar_url} alt="" className="h-14 w-14 rounded-full object-cover" />
+          ) : (
+            <div className="h-14 w-14 rounded-full bg-gradient-to-br from-[#00F0A0] to-[#00CC88] flex items-center justify-center text-base font-semibold text-black">
+              {initials}
+            </div>
+          )}
           <div>
             <p className="text-sm font-semibold text-slate-100">
-              {user?.full_name || (isGuest ? 'Guest User' : 'User')}
+              {user?.full_name || 'User'}
             </p>
             <p className="text-xs text-slate-400 mt-0.5">
-              {user?.email || (isGuest ? 'Demo session — no account' : '—')}
+              {user?.email || '—'}
             </p>
           </div>
         </div>
@@ -132,37 +141,21 @@ function ProfilePanel({ user, isGuest, signOut }: { user: any; isGuest: boolean;
         <div className="divide-y divide-white/[0.04]">
           <Field label="Email" value={user?.email || '—'} />
           <Field label="Full name" value={user?.full_name || '—'} />
-          <Field label="Company" value={user?.company_name || '—'} />
-          <Field label="Stage" value={user?.startup_stage || '—'} />
+          <Field label="Provider" value={providerLabel} />
           <Field
             label="Session"
             value={
               <span className={cn(
                 'inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-xs',
-                isGuest ? 'bg-amber-500/10 text-amber-300 border border-amber-500/20'
-                        : 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/20'
+                'bg-emerald-500/10 text-emerald-300 border border-emerald-500/20'
               )}>
                 <ShieldCheck className="h-3 w-3" />
-                {isGuest ? 'Guest mode' : 'Authenticated'}
+                Authenticated
               </span>
             }
           />
         </div>
       </Card>
-
-      {isGuest && (
-        <Card title="Upgrade from guest" description="Create an account to persist data across devices.">
-          <p className="text-sm text-slate-400 mb-3">
-            You're currently browsing with demo data only. Sign out and register to get a real workspace.
-          </p>
-          <button
-            onClick={async () => { await signOut(); }}
-            className="px-3 py-2 rounded-lg bg-[#00F0A0] hover:bg-[#00D890] text-black text-sm font-medium transition"
-          >
-            Create account
-          </button>
-        </Card>
-      )}
 
       <Card title="Sign out" description="End your current session on this device.">
         <button

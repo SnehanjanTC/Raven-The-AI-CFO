@@ -25,7 +25,7 @@ A Claude-powered financial dashboard with an AI copilot, custom KPI builder, Zoh
 - **Reports (`/reports`)** — Generate and export (Excel, PDF, PPTX) P&L, cash flow, and custom reports.
 - **Integrations (`/integrations`)** — Connect Zoho Books via MCP (OAuth). Pulls live MRR/ARR, invoices, and GST data.
 - **Settings (`/settings`)** — Profile, Claude API key management, demo-data toggle.
-- **Guest Mode** — Explore the full UI without any backend or accounts.
+- **OAuth login** — Google + Microsoft sign-in via Supabase Auth (with email/password as fallback).
 
 ## Tech Stack
 
@@ -38,37 +38,47 @@ A Claude-powered financial dashboard with an AI copilot, custom KPI builder, Zoh
 | Backend | FastAPI, SQLAlchemy, SQLite (dev) / Supabase Postgres (prod) |
 | Auth & Realtime | Supabase (optional) |
 
-## Quick Start (Frontend Only — Guest Mode)
+## Quick Start
 
 ```bash
 git clone https://github.com/SnehanjanTC/Raven-The-AI-CFO.git
 cd Raven-The-AI-CFO
 npm install
-cp .env.example .env   # placeholders work for guest mode
+cp .env.example .env
+# Fill in VITE_SUPABASE_URL + VITE_SUPABASE_ANON_KEY (see Supabase setup below)
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) and click **Continue as Guest**. All pages render with demo data; no backend or Supabase needed.
+Open [http://localhost:3000](http://localhost:3000) and sign in with Google or Microsoft.
 
-## Full Setup (with Backend)
+## Supabase + OAuth Setup
 
-### 1. Frontend env
+Raven uses Supabase Auth for Google and Microsoft sign-in.
 
-```bash
-cp .env.example .env
-```
-
-Fill in `.env`:
+1. Create a project at [supabase.com](https://supabase.com).
+2. In **Authentication → Providers**, enable **Google** and **Microsoft (Azure)**.
+   - Google: create OAuth 2.0 credentials in [Google Cloud Console](https://console.cloud.google.com/apis/credentials), add the Supabase callback URL (`https://<project-ref>.supabase.co/auth/v1/callback`).
+   - Microsoft: register an app in [Entra ID](https://entra.microsoft.com/), add the same Supabase callback URL as a redirect URI.
+3. In **Authentication → URL Configuration**, set the **Site URL** to `http://localhost:3000` for dev (and your production URL for prod). Add `http://localhost:3000/chat` and `<prod>/chat` to **Redirect URLs**.
+4. Copy your project URL and anon key into `.env`:
 
 ```env
-VITE_ANTHROPIC_API_KEY="sk-ant-..."
-VITE_API_URL="http://localhost:8000"
-# Optional — enables login/persistence:
-VITE_SUPABASE_URL="https://your-project.supabase.co"
-VITE_SUPABASE_ANON_KEY="your-anon-key"
+VITE_SUPABASE_URL="https://<project-ref>.supabase.co"
+VITE_SUPABASE_ANON_KEY="ey..."
 ```
 
-### 2. Backend
+5. (Optional) In the SQL Editor, paste & run `supabase_schema.sql` to create tables for chat history, reports, and ledger persistence.
+
+If you want Claude AI in the dashboard:
+
+```env
+VITE_ANTHROPIC_API_KEY="sk-ant-..."   # dev only — keep behind backend in prod
+VITE_API_URL="http://localhost:8000"  # if using the FastAPI backend below
+```
+
+## Backend (Optional)
+
+A FastAPI service powers chat tools, metrics, and the Zoho MCP integration. Skip if you only want the frontend with Supabase Auth.
 
 ```bash
 cd backend
@@ -80,15 +90,7 @@ uvicorn app.main:app --reload --port 8000
 
 The backend ships with SQLite for local development (`sqlite+aiosqlite:///./raven.db`), so no database server is required.
 
-### 3. (Optional) Supabase schema
-
-If you want persistent auth and chat history:
-
-1. Create a project at [supabase.com](https://supabase.com).
-2. In the SQL Editor, paste & run `supabase_schema.sql`.
-3. Add `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` to `.env`.
-
-### 4. (Optional) Zoho Books MCP
+### Zoho Books MCP
 
 1. Go to `/integrations` in the UI.
 2. Enter your Zoho MCP endpoint URL.

@@ -1,173 +1,140 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { api } from '@/lib/api';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
+import { getSupabase } from '@/shared/services/supabase/client';
+
+export type OAuthProvider = 'google' | 'azure';
 
 interface User {
   id: string;
   email: string;
   full_name?: string;
-  company_name?: string;
-  gstin?: string;
-  pan?: string;
-  startup_stage?: string;
-  is_guest?: boolean;
+  avatar_url?: string;
+  provider?: string;
 }
 
 interface AuthState {
   session: { user: { email: string; id: string; [key: string]: any } } | null;
   user: User | null;
-  isGuest: boolean;
   isAuthenticated: boolean;
+  isConfigured: boolean;
   loading: boolean;
   signOut: () => Promise<void>;
-  signIn: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string, fullName?: string, companyName?: string) => Promise<void>;
-  guestLogin: () => Promise<void>;
+  signInWithOAuth: (provider: OAuthProvider) => Promise<void>;
+  signInWithPassword: (email: string, password: string) => Promise<void>;
+  signUpWithPassword: (email: string, password: string, fullName?: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthState | null>(null);
 
-export function AuthProvider({ children, onAuthChange }: { children: React.ReactNode; onAuthChange?: (user: User | null) => void }) {
+function mapSupabaseUser(u: any | null): User | null {
+  if (!u) return null;
+  const meta = u.user_metadata || {};
+  return {
+    id: u.id,
+    email: u.email || meta.email || '',
+    full_name: meta.full_name || meta.name,
+    avatar_url: meta.avatar_url || meta.picture,
+    provider: u.app_metadata?.provider,
+  };
+}
+
+export function AuthProvider({
+  children,
+  onAuthChange,
+}: {
+  children: React.ReactNode;
+  onAuthChange?: (user: User | null) => void;
+}) {
+  const supabase = getSupabase();
+  const isConfigured = !!supabase;
   const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [isGuest, setIsGuest] = useState(localStorage.getItem('raven_guest_mode') === 'true');
+  const [session, setSession] = useState<AuthState['session']>(null);
+  const [loading, setLoading] = useState(isConfigured);
+  const onAuthChangeRef = useRef(onAuthChange);
 
-  // Initialize auth on mount
   useEffect(() => {
-    const initAuth = async () => {
-      try {
-        const token = api.getToken();
-        if (token) {
-          // Token exists, verify it by fetching current user
-          try {
-            const userData = await api.auth.me();
-            setUser(userData as User);
-            setIsGuest(userData.is_guest ?? false);
-            if (userData.is_guest) {
-              localStorage.setItem('raven_guest_mode', 'true');
-            } else {
-              localStorage.removeItem('raven_guest_mode');
-            }
-            onAuthChange?.(userData as User);
-          } catch (error: any) {
-            const status = error.response?.status || error.status;
-            if (status === 401) {
-              // Token is invalid, clear it
-              api.clearToken();
-              localStorage.removeItem('raven_guest_mode');
-              setUser(null);
-              setIsGuest(false);
-              onAuthChange?.(null);
-            } else if (isGuest || localStorage.getItem('raven_guest_mode') === 'true') {
-              // Network error or backend unavailable in guest mode — keep guest session alive
-              console.warn('Backend unreachable, continuing in guest mode');
-              setIsGuest(true);
-            } else {
-              throw error;
-            }
-          }
-        } else if (isGuest) {
-          // No token but guest mode is enabled
-          setUser(null);
-        } else {
-          // No token and not guest mode
-          setUser(null);
-          setIsGuest(false);
-        }
-      } catch (error) {
-        console.debug('[auth] init failed', error);
-        setUser(null);
-        setIsGuest(false);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    initAuth();
+    onAuthChangeRef.current = onAuthChange;
   }, [onAuthChange]);
 
-  const signIn = async (email: string, password: string) => {
-    try {
-      const response = await api.auth.login({ email, password });
-      api.setToken(response.access_token);
-
-      // Fetch user details after login
-      const userData = await api.auth.me();
-      setUser(userData as User);
-      localStorage.removeItem('raven_guest_mode');
-      setIsGuest(false);
-      onAuthChange?.(userData as User);
-    } catch (error) {
-      console.debug('[auth] sign in failed', error);
-      throw error;
+  useEffect(() => {
+    if (!supabase) {
+      setLoading(false);
+      return;
     }
+
+    let cancelled = false;
+
+    supabase.auth.getSession().then(({ data }) => {
+      if (cancelled) return;
+      const u = mapSupabaseUser(data.session?.user);
+      setUser(u);
+      setSession(data.session ? { user: { email: u?.email || '', id: u?.id || '', ...u } } : null);
+      setLoading(false);
+      onAuthChangeRef.current?.(u);
+    }).catch(() => {
+      if (!cancelled) setLoading(false);
+    });
+
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, supaSession) => {
+      const u = mapSupabaseUser(supaSession?.user);
+      setUser(u);
+      setSession(supaSession ? { user: { email: u?.email || '', id: u?.id || '', ...u } } : null);
+      onAuthChangeRef.current?.(u);
+    });
+
+    return () => {
+      cancelled = true;
+      sub.subscription.unsubscribe();
+    };
+  }, [supabase]);
+
+  const signInWithOAuth = async (provider: OAuthProvider) => {
+    if (!supabase) {
+      throw new Error('Authentication is not configured. Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to your .env.');
+    }
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider,
+      options: {
+        redirectTo: `${window.location.origin}/chat`,
+      },
+    });
+    if (error) throw error;
   };
 
-  const register = async (email: string, password: string, fullName?: string, companyName?: string) => {
-    try {
-      const response = await api.auth.register({
-        email,
-        password,
-        full_name: fullName,
-        company_name: companyName,
-      });
-      api.setToken(response.access_token);
-
-      // Fetch user details after registration
-      const userData = await api.auth.me();
-      setUser(userData as User);
-      localStorage.removeItem('raven_guest_mode');
-      setIsGuest(false);
-      onAuthChange?.(userData as User);
-    } catch (error) {
-      console.debug('[auth] register failed', error);
-      throw error;
-    }
+  const signInWithPassword = async (email: string, password: string) => {
+    if (!supabase) throw new Error('Authentication is not configured.');
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) throw error;
   };
 
-  const guestLogin = async () => {
-    try {
-      const response = await api.auth.guest();
-      api.setToken(response.access_token);
-
-      // Fetch user details for guest
-      const userData = await api.auth.me();
-      setUser(userData as User);
-      localStorage.setItem('raven_guest_mode', 'true');
-      setIsGuest(true);
-      onAuthChange?.(userData as User);
-    } catch (error) {
-      console.debug('[auth] guest login failed', error);
-      throw error;
-    }
+  const signUpWithPassword = async (email: string, password: string, fullName?: string) => {
+    if (!supabase) throw new Error('Authentication is not configured.');
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { data: fullName ? { full_name: fullName } : undefined },
+    });
+    if (error) throw error;
   };
 
   const signOut = async () => {
-    try {
-      await api.auth.logout();
-    } catch (error) {
-      console.debug('[auth] logout failed', error);
-    } finally {
-      localStorage.removeItem('raven_guest_mode');
-      setUser(null);
-      setIsGuest(false);
-      onAuthChange?.(null);
-      window.location.reload();
+    if (supabase) {
+      try { await supabase.auth.signOut(); } catch { /* noop */ }
     }
+    setUser(null);
+    setSession(null);
+    onAuthChangeRef.current?.(null);
   };
-
-  // Create session object for backward compatibility
-  const session = user ? { user: { email: user.email, id: user.id, ...user } } : null;
 
   const value: AuthState = {
     session,
     user,
-    isGuest,
-    isAuthenticated: !!user || isGuest,
+    isAuthenticated: !!user,
+    isConfigured,
     loading,
     signOut,
-    signIn,
-    register,
-    guestLogin,
+    signInWithOAuth,
+    signInWithPassword,
+    signUpWithPassword,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
