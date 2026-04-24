@@ -1,6 +1,6 @@
-# Contributing to FinOS
+# Contributing to Raven
 
-Thank you for your interest in contributing to FinOS! This document provides guidelines and instructions for contributing.
+Thank you for your interest in contributing to Raven! This document provides guidelines and instructions for contributing.
 
 ## Getting Started
 

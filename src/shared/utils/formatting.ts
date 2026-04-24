@@ -7,6 +7,13 @@ export function formatCurrency(amount: number, compact = false): string {
   return `$${amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
 }
 
+/** Format a number as Indian Rupees with lakh (L) and crore (Cr) units */
+export function formatINR(n: number): string {
+  if (Math.abs(n) >= 1e7) return `₹${(n / 1e7).toFixed(2)}Cr`;
+  if (Math.abs(n) >= 1e5) return `₹${(n / 1e5).toFixed(2)}L`;
+  return `₹${Math.round(n).toLocaleString('en-IN')}`;
+}
+
 /** Get relative time string from ISO timestamp */
 export function getTimeAgo(timestamp: string): string {
   const seconds = Math.floor((new Date().getTime() - new Date(timestamp).getTime()) / 1000);

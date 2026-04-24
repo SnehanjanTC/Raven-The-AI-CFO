@@ -9,7 +9,6 @@ from app.core.deps import get_current_user
 from app.models.user import User
 from app.models.transaction import Transaction
 from app.models.invoice import Invoice
-from app.models.filing import Filing
 from app.schemas.dashboard import (
     DashboardResponse,
     DashboardMetric,
@@ -82,12 +81,6 @@ async def get_dashboard_summary(
         select(Invoice).where(Invoice.user_id == user.id)
     )
     invoices = inv_result.scalars().all()
-
-    # Fetch filings
-    fil_result = await db.execute(
-        select(Filing).where(Filing.user_id == user.id)
-    )
-    filings = fil_result.scalars().all()
 
     def _cat(t) -> str:
         return (getattr(t, "category", "") or "").strip().lower()
@@ -162,12 +155,9 @@ async def get_dashboard_summary(
     )
     ptax_liability = round(payroll_total * 0.0025, 2)
 
-    # Filing metrics
-    overdue_filings = sum(1 for f in filings if f.status == "overdue")
-    upcoming_deadlines = sum(
-        1 for f in filings
-        if f.status == "pending" and f.due_date <= datetime.utcnow().date() + timedelta(days=30)
-    )
+    # Filing metrics (placeholder while filings feature is under development)
+    overdue_filings = 0
+    upcoming_deadlines = 0
 
     # Build display metrics array
     metrics = [
@@ -217,7 +207,7 @@ async def get_dashboard_summary(
         upcoming_deadlines=upcoming_deadlines,
         invoice_count=len(invoices),
         transaction_count=len(transactions),
-        filing_count=len(filings),
+        filing_count=0,
     )
 
 

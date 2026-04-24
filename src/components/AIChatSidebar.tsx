@@ -17,7 +17,7 @@ interface AIChatSidebarProps {
   currentPage?: string;
 }
 
-const WELCOME_MESSAGE = "Hey! I'm your FinOS AI assistant. Ask me about your finances, compliance, or anything else.";
+const WELCOME_MESSAGE = "Hey! I'm your Raven AI assistant. Ask me about your finances, compliance, or anything else.";
 
 const SUGGESTION_CHIPS = [
   "What's my burn rate?",
@@ -71,7 +71,7 @@ function getPageSuggestions(page: string): { chips: string[]; welcome: string } 
       };
     default:
       return {
-        welcome: "Hey! I'm your FinOS AI assistant. Ask me about your finances, compliance, or anything else.",
+        welcome: "Hey! I'm your Raven AI assistant. Ask me about your finances, compliance, or anything else.",
         chips: SUGGESTION_CHIPS,
       };
   }
@@ -117,8 +117,8 @@ function MessageBubble({ message }: { message: Message }) {
       )}
     >
       {isAI && (
-        <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-gradient-to-br from-[#e5a764] to-[#c4bdb4] flex items-center justify-center">
-          <Bot className="w-5 h-5 text-white" />
+        <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-gradient-to-br from-[#00F0A0] to-[#00CC88] flex items-center justify-center">
+          <Bot className="w-5 h-5 text-[#001A0F]" />
         </div>
       )}
 
@@ -128,12 +128,12 @@ function MessageBubble({ message }: { message: Message }) {
             'px-4 py-3 rounded-2xl text-sm leading-relaxed',
             isAI
               ? 'bg-white/[0.03] border border-white/[0.08] relative overflow-hidden group'
-              : 'bg-[#e5a764]/10 border border-[#e5a764]/20'
+              : 'bg-[#00F0A0]/10 border border-[#00F0A0]/20'
           )}
         >
           {isAI && (
             <div
-              className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-[#e5a764] to-[#c4bdb4] group-hover:opacity-100 opacity-50 transition-opacity"
+              className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-[#00F0A0] to-[#00CC88] group-hover:opacity-100 opacity-50 transition-opacity"
               aria-hidden
             />
           )}
@@ -216,7 +216,7 @@ function InputArea({
   };
 
   return (
-    <div className="border-t border-white/[0.08] bg-gradient-to-t from-[#1c1c1a]/50 to-transparent p-4">
+    <div className="border-t border-white/[0.08] bg-gradient-to-t from-[#141419]/50 to-transparent p-4">
       <div className="flex gap-3 items-end">
         <textarea
           ref={textareaRef}
@@ -233,7 +233,7 @@ function InputArea({
           className={cn(
             'flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center transition-all duration-200',
             inputValue.trim()
-              ? 'bg-[#e5a764] hover:bg-[#d99850] text-white shadow-lg hover:shadow-xl'
+              ? 'bg-[#00F0A0] hover:bg-[#00CC88] text-[#001A0F] shadow-lg hover:shadow-xl'
               : 'bg-white/[0.05] text-white/40 cursor-not-allowed'
           )}
         >
@@ -329,7 +329,7 @@ export function AIChatSidebar({
       {/* Backdrop overlay for mobile */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-black/40 backdrop-blur-sm lg:hidden z-40 transition-opacity duration-300"
+          className="fixed inset-0 bg-black/40 backdrop-blur-sm lg:hidden z-[49] transition-opacity duration-300"
           onClick={onClose}
           aria-hidden
         />
@@ -338,7 +338,7 @@ export function AIChatSidebar({
       {/* Chat Sidebar Panel */}
       <div
         className={cn(
-          'fixed right-0 top-0 bottom-0 w-full lg:w-96 bg-[#111110]/95 backdrop-blur-2xl border-l border-white/[0.04] z-50 flex flex-col transition-transform duration-300 ease-out shadow-2xl',
+          'fixed right-0 top-0 bottom-0 w-full lg:w-96 bg-[#0A0A0F]/95 backdrop-blur-2xl border-l border-white/[0.04] z-50 flex flex-col transition-transform duration-300 ease-out shadow-2xl',
           isOpen ? 'translate-x-0' : 'translate-x-full'
         )}
       >
@@ -350,9 +350,9 @@ export function AIChatSidebar({
               <div className="absolute inset-0 w-2.5 h-2.5 rounded-full bg-green-500/20 animate-ping" />
             </div>
             <div className="flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-transparent bg-gradient-to-r from-[#e5a764] to-[#c4bdb4] bg-clip-text" />
-              <h2 className="text-sm font-semibold bg-gradient-to-r from-[#e5a764] to-[#c4bdb4] bg-clip-text text-transparent">
-                FinOS AI
+              <Sparkles className="w-5 h-5 text-transparent bg-gradient-to-r from-[#00F0A0] to-[#00CC88] bg-clip-text" />
+              <h2 className="text-sm font-semibold bg-gradient-to-r from-[#00F0A0] to-[#00CC88] bg-clip-text text-transparent">
+                Raven AI
               </h2>
             </div>
             <span className="text-xs text-white/50">Online</span>

@@ -278,7 +278,7 @@ export interface APIError {
 // ============================================================================
 
 let API_BASE_URL = import.meta.env.VITE_API_URL || '';
-const TOKEN_STORAGE_KEY = 'finos_token';
+const TOKEN_STORAGE_KEY = 'raven_token';
 
 /**
  * Get current API base URL
@@ -385,7 +385,7 @@ async function fetchAPI<T>(
     // AuthProvider will route to /login on next mount, and individual pages
     // can decide how to handle the throw locally.
     if (response.status === 401) {
-      const isGuest = localStorage.getItem('finos_guest_mode') === 'true';
+      const isGuest = localStorage.getItem('raven_guest_mode') === 'true';
       if (!isGuest) {
         clearToken();
       }

@@ -286,7 +286,7 @@ export async function exportXLSX(report: Report) {
 
   // ── Cover sheet ──
   const coverData: (string | number)[][] = [
-    [g ? g.companyName : 'FINOS Technologies Private Limited'],
+    [g ? g.companyName : 'RAVEN Technologies Private Limited'],
     [g?.cin ? `CIN: ${g.cin}` : ''],
     [g?.registeredOffice ? `Registered Office: ${g.registeredOffice}` : ''],
     [''],
@@ -721,7 +721,7 @@ export async function exportPDF(report: Report) {
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(16);
   doc.setTextColor(255, 255, 255);
-  doc.text(g ? g.companyName : 'FINOS Technologies Private Limited', 14, 15);
+  doc.text(g ? g.companyName : 'RAVEN Technologies Private Limited', 14, 15);
 
   if (g?.cin) {
     doc.setFontSize(8);
@@ -1317,7 +1317,7 @@ export async function exportPDF(report: Report) {
     doc.setFont('helvetica', 'normal');
     doc.setTextColor(...muted);
     const footerText = [
-      g?.companyName || 'FINOS',
+      g?.companyName || 'RAVEN',
       report.name,
       g ? `${g.standard} — Schedule III Div ${g.division}` : '',
       confLabel(report.confidentiality) || 'Internal',
@@ -1340,7 +1340,7 @@ export async function exportPPTX(report: Report) {
   const g = report.gaap;
 
   pres.layout = 'LAYOUT_16x9';
-  pres.author = report.author || 'FINOS';
+  pres.author = report.author || 'RAVEN';
   pres.title = report.name;
   pres.subject = `${report.type} — ${report.period}`;
 
@@ -1361,7 +1361,7 @@ export async function exportPPTX(report: Report) {
   // ── Slide 1: Title ──
   const slide1 = pres.addSlide();
   addTopBar(slide1);
-  slide1.addText(g ? g.companyName : 'FINOS Technologies Pvt. Ltd.', { x: 0.6, y: 0.8, w: 8.8, h: 0.5, fontSize: 12, fontFace: 'Arial', color: ACCENT, bold: true, charSpacing: 4 });
+  slide1.addText(g ? g.companyName : 'RAVEN Technologies Pvt. Ltd.', { x: 0.6, y: 0.8, w: 8.8, h: 0.5, fontSize: 12, fontFace: 'Arial', color: ACCENT, bold: true, charSpacing: 4 });
   if (g?.cin) slide1.addText(`CIN: ${g.cin}`, { x: 0.6, y: 1.25, w: 8.8, h: 0.3, fontSize: 8, fontFace: 'Arial', color: MUTED });
   slide1.addText(report.name, { x: 0.6, y: 1.7, w: 8.8, h: 1.0, fontSize: 28, fontFace: 'Arial', color: WHITE, bold: true });
   slide1.addText(
@@ -1653,7 +1653,7 @@ export async function exportPPTX(report: Report) {
   const slideEnd = pres.addSlide();
   addTopBar(slideEnd);
   slideEnd.addText('Thank You', { x: 0.6, y: 1.6, w: 8.8, h: 0.8, fontSize: 32, fontFace: 'Arial', color: WHITE, bold: true, align: 'center' });
-  slideEnd.addText(g ? g.companyName : 'FINOS Technologies Pvt. Ltd.', { x: 0.6, y: 2.6, w: 8.8, h: 0.4, fontSize: 12, fontFace: 'Arial', color: ACCENT, align: 'center' });
+  slideEnd.addText(g ? g.companyName : 'RAVEN Technologies Pvt. Ltd.', { x: 0.6, y: 2.6, w: 8.8, h: 0.4, fontSize: 12, fontFace: 'Arial', color: ACCENT, align: 'center' });
   if (report.approvedBy) {
     slideEnd.addText(`Approved by: ${report.approvedBy.name} (${report.approvedBy.role})`, { x: 0.6, y: 3.2, w: 8.8, h: 0.3, fontSize: 9, fontFace: 'Arial', color: MUTED, align: 'center' });
   }

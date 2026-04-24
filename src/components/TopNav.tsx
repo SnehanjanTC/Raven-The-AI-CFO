@@ -1,18 +1,25 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
-  Search,
   Sparkles,
   Bell,
   Menu,
   Settings,
   LogOut,
-  Command,
   ChevronDown,
+  MessageSquare,
+  Grid3X3,
+  FileText,
+  List,
+  Plug,
+  Calculator,
+  Upload,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/shared/contexts';
+import { useSession } from '@/hooks/useSession';
 import api from '@/lib/api';
+import CSVUploader from '@/components/CSVUploader';
 
 interface TopNavProps {
   onMenuClick: () => void;
@@ -64,11 +71,13 @@ export const TopNav: React.FC<TopNavProps> = ({
   const location = useLocation();
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
+  const { sessionData } = useSession();
 
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [showNotifications, setShowNotifications] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [isCSVUploaderOpen, setIsCSVUploaderOpen] = useState(false);
 
   const notificationsRef = useRef<HTMLDivElement>(null);
   const userMenuRef = useRef<HTMLDivElement>(null);
@@ -156,13 +165,12 @@ export const TopNav: React.FC<TopNavProps> = ({
     <header
       className={cn(
         'sticky top-0 z-40',
-        'h-14',
         'bg-background/60 backdrop-blur-2xl',
         'border-b border-white/[0.04]',
         'w-full'
       )}
     >
-      <div className="h-full px-4 lg:px-6 flex items-center justify-between gap-4">
+      <div className="h-14 px-4 lg:px-6 flex items-center justify-between gap-4">
         {/* Mobile menu button */}
         <button
           onClick={onMenuClick}
@@ -178,50 +186,63 @@ export const TopNav: React.FC<TopNavProps> = ({
           <Menu className="h-5 w-5" />
         </button>
 
-        {/* Page title */}
-        <div className="hidden sm:flex items-center">
-          <span className="text-sm font-medium text-slate-400">
-            {getPageTitle()}
-          </span>
+        {/* Logo */}
+        <div className="flex items-center gap-2 min-w-fit">
+          <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center">
+            <span className="text-xs font-bold text-primary">R</span>
+          </div>
+          <span className="text-sm font-semibold text-slate-200 hidden sm:inline">Raven</span>
         </div>
+
+        {/* Primary nav (center) */}
+        <nav className="hidden md:flex items-center gap-1 overflow-x-auto no-scrollbar">
+          {[
+            { path: '/chat', label: 'Chat', Icon: MessageSquare },
+            { path: '/dashboard', label: 'Dashboard', Icon: Grid3X3 },
+            { path: '/kpis', label: 'KPIs', Icon: Calculator },
+            { path: '/reports', label: 'Reports', Icon: FileText },
+            { path: '/ledger', label: 'Ledger', Icon: List },
+            { path: '/integrations', label: 'Integrations', Icon: Plug },
+          ].map(({ path, label, Icon }) => {
+            const active = location.pathname === path;
+            return (
+              <button
+                key={path}
+                onClick={() => navigate(path)}
+                className={cn(
+                  'flex items-center gap-1.5 px-3 py-1.5 rounded-lg',
+                  'text-xs font-medium transition-all duration-200',
+                  active
+                    ? 'bg-primary/20 text-primary border border-primary/30'
+                    : 'text-slate-400 hover:text-slate-300 hover:bg-white/[0.04] border border-transparent'
+                )}
+              >
+                <Icon className="h-4 w-4" />
+                <span>{label}</span>
+              </button>
+            );
+          })}
+        </nav>
 
         {/* Spacer */}
         <div className="flex-1" />
 
-        {/* Command bar trigger */}
+        {/* Upload CSV button */}
         <button
-          onClick={onCommandBarOpen}
+          onClick={() => setIsCSVUploaderOpen(true)}
           className={cn(
-            'hidden md:flex items-center gap-2',
-            'px-3 py-1.5 rounded-xl',
-            'bg-white/[0.04] border border-white/[0.06]',
-            'text-slate-400 hover:text-slate-300',
-            'hover:bg-white/[0.06] hover:border-white/[0.08]',
-            'transition-all duration-200',
-            'group'
+            'hidden sm:flex items-center gap-2',
+            'px-3 py-1.5 rounded-lg',
+            'bg-white/[0.04] hover:bg-white/[0.06]',
+            'border border-white/[0.06] hover:border-white/[0.08]',
+            'text-slate-300 hover:text-slate-200',
+            'text-xs font-medium',
+            'transition-all duration-200'
           )}
+          title="Upload CSV"
         >
-          <Search className="h-4 w-4" />
-          <span className="text-sm">Search or ask AI...</span>
-          <div className="ml-2 flex items-center gap-1 pl-2 border-l border-white/[0.1]">
-            <Command className="h-3 w-3" />
-            <span className="text-xs text-slate-500">K</span>
-          </div>
-        </button>
-
-        {/* Mobile command bar trigger (compact) */}
-        <button
-          onClick={onCommandBarOpen}
-          className={cn(
-            'md:hidden inline-flex items-center justify-center',
-            'h-10 w-10 rounded-lg',
-            'text-slate-400 hover:text-slate-200',
-            'bg-white/[0.03] hover:bg-white/[0.06]',
-            'transition-colors duration-200'
-          )}
-          aria-label="Open command bar"
-        >
-          <Search className="h-4 w-4" />
+          <Upload className="h-3.5 w-3.5" />
+          <span>Upload</span>
         </button>
 
         {/* AI Chat button */}
@@ -230,9 +251,9 @@ export const TopNav: React.FC<TopNavProps> = ({
           className={cn(
             'relative inline-flex items-center justify-center',
             'h-10 w-10 rounded-full',
-            'bg-[#e5a764]/10 hover:bg-[#e5a764]/20',
-            'border border-[#e5a764]/20 hover:border-[#e5a764]/30',
-            'text-[#e5a764]',
+            'bg-[#00F0A0]/10 hover:bg-[#00F0A0]/20',
+            'border border-[#00F0A0]/20 hover:border-[#00F0A0]/30',
+            'text-[#00F0A0]',
             'transition-all duration-200',
             'group'
           )}
@@ -244,7 +265,7 @@ export const TopNav: React.FC<TopNavProps> = ({
             className={cn(
               'absolute top-1 right-1',
               'h-2 w-2 rounded-full',
-              'bg-[#e5a764]',
+              'bg-[#00F0A0]',
               'animate-pulse'
             )}
           />
@@ -272,7 +293,7 @@ export const TopNav: React.FC<TopNavProps> = ({
                 className={cn(
                   'absolute top-0 right-0',
                   'h-2 w-2 rounded-full',
-                  'bg-[#e8866a]'
+                  'bg-[#FF6B6B]'
                 )}
               />
             )}
@@ -284,7 +305,7 @@ export const TopNav: React.FC<TopNavProps> = ({
               className={cn(
                 'absolute right-0 top-full mt-2',
                 'w-80 rounded-xl',
-                'bg-[#1c1c1a]/95 border border-white/[0.06]',
+                'bg-[#141419]/95 border border-white/[0.06]',
                 'backdrop-blur-xl',
                 'shadow-lg',
                 'overflow-hidden'
@@ -314,7 +335,7 @@ export const TopNav: React.FC<TopNavProps> = ({
                           <div
                             className={cn(
                               'h-2 w-2 rounded-full flex-shrink-0 mt-1.5',
-                              'bg-[#e5a764]'
+                              'bg-[#00F0A0]'
                             )}
                           />
                         )}
@@ -378,7 +399,7 @@ export const TopNav: React.FC<TopNavProps> = ({
             <div
               className={cn(
                 'h-8 w-8 rounded-full',
-                'bg-gradient-to-br from-[#e5a764] to-[#c4a882]',
+                'bg-gradient-to-br from-[#00F0A0] to-[#00CC88]',
                 'flex items-center justify-center',
                 'text-xs font-semibold text-white'
               )}
@@ -401,7 +422,7 @@ export const TopNav: React.FC<TopNavProps> = ({
               className={cn(
                 'absolute right-0 top-full mt-2',
                 'w-48 rounded-xl',
-                'bg-[#1c1c1a]/95 border border-white/[0.06]',
+                'bg-[#141419]/95 border border-white/[0.06]',
                 'backdrop-blur-xl',
                 'shadow-lg',
                 'overflow-hidden'
@@ -452,6 +473,43 @@ export const TopNav: React.FC<TopNavProps> = ({
           )}
         </div>
       </div>
+
+      {/* Metrics Ticker (bottom row) — mirrors ChatLayout */}
+      <div
+        className={cn(
+          'h-11 px-4 lg:px-6 border-t border-white/[0.04]',
+          'flex items-center gap-6 overflow-x-auto',
+          'bg-white/[0.02] text-xs text-slate-400'
+        )}
+      >
+        <div className="flex items-center gap-2 whitespace-nowrap">
+          <span className="text-slate-500">MRR</span>
+          <span className="font-semibold text-slate-200">
+            {sessionData?.metrics_snapshot?.mrr?.value || '₹8.00L'}
+          </span>
+        </div>
+        <div className="flex items-center gap-2 whitespace-nowrap border-l border-white/[0.06] pl-6">
+          <span className="text-slate-500">Burn</span>
+          <span className="font-semibold text-slate-200">
+            {sessionData?.metrics_snapshot?.burn?.value || '₹5.20L'}
+          </span>
+        </div>
+        <div className="flex items-center gap-2 whitespace-nowrap border-l border-white/[0.06] pl-6">
+          <span className="text-slate-500">Runway</span>
+          <div className="flex items-center gap-1.5">
+            <span className="font-semibold text-primary">
+              {sessionData?.metrics_snapshot?.runway?.value || '18 mo'}
+            </span>
+            <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+          </div>
+        </div>
+      </div>
+
+      <CSVUploader
+        isOpen={isCSVUploaderOpen}
+        onClose={() => setIsCSVUploaderOpen(false)}
+        onImportComplete={() => setIsCSVUploaderOpen(false)}
+      />
     </header>
   );
 };

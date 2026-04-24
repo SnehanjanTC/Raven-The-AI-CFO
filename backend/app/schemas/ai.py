@@ -7,11 +7,10 @@ class ChatMessage(BaseModel):
 
 class ChatRequest(BaseModel):
     messages: list[ChatMessage]
-    provider: Optional[str] = None  # openai, anthropic, gemini, grok
     context: Optional[str] = None  # additional system context
     stream: bool = False
+    conversation_id: Optional[str] = None  # for tracking usage
 
 class ChatResponse(BaseModel):
     content: str
-    provider: str
     tokens_used: Optional[int] = None

@@ -4,7 +4,7 @@
  */
 
 const API_BASE = import.meta.env.VITE_API_URL || '';
-const TOKEN_KEY = 'finos_token';
+const TOKEN_KEY = 'raven_token';
 
 function authHeaders(): Record<string, string> {
   const token = localStorage.getItem(TOKEN_KEY);

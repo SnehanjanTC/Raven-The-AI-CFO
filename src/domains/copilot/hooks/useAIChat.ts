@@ -5,7 +5,7 @@ import type { Metric } from '@/shared/types';
 const INITIAL_MESSAGE: ChatMessage = {
   id: '1',
   role: 'assistant',
-  content: "Hello! I'm your **FinOS Copilot**. I've analyzed your current ledger and market conditions. How can I assist with your financial strategy today?\n\nYou can ask about:\n- **Runway projections** based on current burn\n- **Hiring impact** for new engineering roles\n- **Expense anomalies** in your Q3 cloud spend",
+  content: "Hello! I'm your **Raven Copilot**. I've analyzed your current ledger and market conditions. How can I assist with your financial strategy today?\n\nYou can ask about:\n- **Runway projections** based on current burn\n- **Hiring impact** for new engineering roles\n- **Expense anomalies** in your Q3 cloud spend",
   timestamp: new Date(),
   isValidated: true,
 };

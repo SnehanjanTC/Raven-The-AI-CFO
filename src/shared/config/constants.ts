@@ -1,4 +1,4 @@
-export const APP_NAME = 'FinOS';
+export const APP_NAME = 'Raven';
 
 export const TIMEFRAME_OPTIONS = [
   { id: '30d', label: '30D' },

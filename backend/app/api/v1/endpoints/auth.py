@@ -51,7 +51,7 @@ async def guest_login(db: AsyncSession = Depends(get_db)):
     """Login as a guest user."""
     guest_id = str(uuid.uuid4())[:8]
     user = User(
-        email=f"guest_{guest_id}@finos.local",
+        email=f"guest_{guest_id}@raven.local",
         hashed_password=get_password_hash(guest_id),
         full_name=f"Guest {guest_id}",
         is_guest=True,

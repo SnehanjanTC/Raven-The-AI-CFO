@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import {
   Search,
@@ -194,33 +195,35 @@ export function CommandBar({ isOpen, onClose, onCopilotMessage }: CommandBarProp
     );
   };
 
-  if (!isOpen) return null;
-
   return (
-    <div
-      onClick={handleBackdropClick}
-      className={cn(
-        'fixed inset-0 z-50 flex items-start justify-center pt-[20vh] transition-opacity duration-200',
-        isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
-      )}
-      style={{
-        backgroundColor: 'rgba(0, 0, 0, 0.6)',
-        backdropFilter: 'blur(4px)',
-      }}
-    >
-      <div
-        ref={containerRef}
-        className={cn(
-          'w-full max-w-xl transform transition-all duration-200',
-          isOpen ? 'scale-100 opacity-100' : 'scale-95 opacity-0'
-        )}
-        onClick={(e) => e.stopPropagation()}
-      >
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
+          onClick={handleBackdropClick}
+          className="fixed inset-0 z-50 flex items-start justify-center pt-[20vh]"
+          style={{
+            backgroundColor: 'rgba(0, 0, 0, 0.6)',
+            backdropFilter: 'blur(4px)',
+          }}
+        >
+          <motion.div
+            ref={containerRef}
+            initial={{ scale: 0.95, opacity: 0, y: -10 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            exit={{ scale: 0.95, opacity: 0, y: -10 }}
+            transition={{ duration: 0.2, ease: 'easeOut' }}
+            className="w-full max-w-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
         {/* Command Bar Card */}
         <div
           className={cn(
             'rounded-2xl border border-white/[0.06]',
-            'bg-[#1c1c1a]/95 backdrop-blur-xl',
+            'bg-[#141419]/95 backdrop-blur-xl',
             'shadow-[0_20px_60px_rgba(0,0,0,0.4),0_0_40px_rgba(229,167,100,0.1)]',
             'overflow-hidden'
           )}
@@ -367,12 +370,14 @@ export function CommandBar({ isOpen, onClose, onCopilotMessage }: CommandBarProp
                 <span>to select</span>
               </div>
               <div className="flex items-center gap-2">
-                <span>powered by FinOS</span>
+                <span>powered by Raven</span>
               </div>
             </div>
           )}
         </div>
-      </div>
-    </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }

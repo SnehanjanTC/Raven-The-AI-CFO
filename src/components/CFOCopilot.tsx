@@ -136,12 +136,12 @@ function getPageContext(page: string): PageContext {
     case '/settings':
       return {
         label: 'Settings',
-        subtitle: 'I can help you configure FinOS for your needs.',
+        subtitle: 'I can help you configure Raven for your needs.',
         systemHint: 'The founder is viewing SETTINGS. Help with AI provider setup, company configuration, permissions, and data/privacy settings.',
         quickActions: [
           { label: 'Setup AI provider', prompt: 'Help me set up an AI provider for full CFO Copilot capabilities. Which provider do you recommend and how do I get an API key?' },
           { label: 'Company settings', prompt: 'What company settings should I configure for accurate Indian GAAP compliance and tax calculations?' },
-          { label: 'User permissions', prompt: 'How should I set up user roles and permissions for my finance team in FinOS?' },
+          { label: 'User permissions', prompt: 'How should I set up user roles and permissions for my finance team in Raven?' },
           { label: 'Data & privacy', prompt: 'How is my financial data stored and protected? What are the privacy and security settings I should review?' },
         ],
       };
@@ -164,7 +164,7 @@ function getPageContext(page: string): PageContext {
 
 // ── CFO Copilot System Prompt (page-aware) ──────────────────────────
 function getCFOCopilotSystemPrompt(pageHint?: string): string {
-  return `You are the CFO Copilot — your founder's personal AI Chief Financial Officer inside FinOS. You are friendly, plain-English, and handle ALL of the startup's compliance, tax, and financial challenges in simple terms.
+  return `You are the CFO Copilot — your founder's personal AI Chief Financial Officer inside Raven. You are friendly, plain-English, and handle ALL of the startup's compliance, tax, and financial challenges in simple terms.
 
 DOMAINS YOU COVER (invisibly to the founder):
 1. TDS (Tax Deducted at Source) — salary taxes, contractor deductions
@@ -359,7 +359,7 @@ export function CFOCopilot({ isOpen, onClose, initialPrompt, currentPage = '/' }
         setMessages(prev => [...prev, {
           id: `nokey-${Date.now()}`,
           role: 'assistant',
-          content: `I can run **instant calculations** (TDS, GST, Professional Tax, Depreciation) without an API key — just try something like:\n\n• "Calculate TDS on ₹5,00,000 under Section 194C"\n• "Calculate GST on ₹10L at 18%"\n• "Professional tax for ₹45,000 salary in Karnataka"\n• "Depreciation on ₹15L server"\n\nFor **general questions** and **strategic advice**, you'll need to add an AI API key in **Settings → Strategic Intelligence Core**. I support Gemini, OpenAI, Anthropic, and Grok.`
+          content: `I can run **instant calculations** (TDS, GST, Professional Tax, Depreciation) without an API key — just try something like:\n\n• "Calculate TDS on ₹5,00,000 under Section 194C"\n• "Calculate GST on ₹10L at 18%"\n• "Professional tax for ₹45,000 salary in Karnataka"\n• "Depreciation on ₹15L server"\n\nFor **general questions** and **strategic advice**, you'll need to add a Claude API key in **Settings → Strategic Intelligence Core**.`
         }]);
         setLoading(false);
         return;

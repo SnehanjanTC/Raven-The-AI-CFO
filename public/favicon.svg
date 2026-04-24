@@ -1,0 +1,19 @@
+<svg viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg">
+  <!-- Rounded square background -->
+  <rect width="128" height="128" rx="24" fill="#00F0A0"/>
+
+  <!-- "R" lettermark -->
+  <g transform="translate(32, 28)">
+    <!-- Vertical stem -->
+    <rect x="8" y="0" width="12" height="72" rx="3" fill="white"/>
+
+    <!-- Top horizontal bar -->
+    <rect x="8" y="0" width="44" height="12" rx="3" fill="white"/>
+
+    <!-- Middle horizontal bar -->
+    <rect x="8" y="32" width="32" height="10" rx="3" fill="white" opacity="0.8"/>
+
+    <!-- Diagonal leg -->
+    <line x1="40" y1="42" x2="60" y2="72" stroke="white" stroke-width="12" stroke-linecap="round"/>
+  </g>
+</svg>

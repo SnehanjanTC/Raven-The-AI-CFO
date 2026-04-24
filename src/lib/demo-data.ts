@@ -1,5 +1,5 @@
 /**
- * Demo Data Management System for FinOS
+ * Demo Data Management System for Raven
  *
  * This module manages realistic dummy data for an Indian SaaS startup.
  * Company Profile: "AcmeTech Solutions Pvt Ltd"
@@ -8,7 +8,7 @@
  * - 15 employees across Mumbai (MH) and Bangalore (KA)
  * - 2 years in operation
  *
- * Data is stored in localStorage with 'finos_demo_' prefix for easy identification.
+ * Data is stored in localStorage with 'raven_demo_' prefix for easy identification.
  */
 
 // ============================================================================
@@ -919,9 +919,9 @@ const DEMO_VENDORS: DemoVendor[] = [
 // DEMO DATA STATE & STORAGE
 // ============================================================================
 
-const STORAGE_KEY = 'finos_demo_data';
-const STATE_KEY = 'finos_demo_state';
-const LOADED_AT_KEY = 'finos_demo_loaded_at';
+const STORAGE_KEY = 'raven_demo_data';
+const STATE_KEY = 'raven_demo_state';
+const LOADED_AT_KEY = 'raven_demo_loaded_at';
 
 // Event listeners for reactivity
 const listeners: Set<() => void> = new Set();
@@ -1459,7 +1459,7 @@ export function getDemoReports(): import('@/types').Report[] {
 
   // ── Indian GAAP / Schedule III structured data ──
   const CIN = 'U72200KA2023PTC170001';
-  const COMPANY_NAME = 'FINOS Technologies Private Limited';
+  const COMPANY_NAME = 'RAVEN Technologies Private Limited';
   const REGD_OFFICE = 'HSR Layout, Bengaluru, Karnataka - 560102';
 
   // Derive Schedule III figures from demo summary
@@ -2174,7 +2174,7 @@ export function getDemoActivityLog(): { agent: string; action: string; time: str
 // NOTIFICATION PREFERENCES (localStorage-backed)
 // ============================================================================
 
-const PREF_KEY = 'finos_notification_prefs';
+const PREF_KEY = 'raven_notification_prefs';
 
 export interface NotificationPrefs {
   burnRateSpikes: boolean;

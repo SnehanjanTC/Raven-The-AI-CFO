@@ -1,6 +1,6 @@
-# FinOS Control Plane — Implementation Plan
+# Raven Control Plane — Implementation Plan
 
-> Transform FinOS from a financial dashboard into an **agentic finance control plane** that orchestrates, governs, and automates an organization's entire financial stack.
+> Transform Raven from a financial dashboard into an **agentic finance control plane** that orchestrates, governs, and automates an organization's entire financial stack.
 
 ## Architecture Principles
 
@@ -163,7 +163,7 @@
 
 ## Phase 4: Unified Ledger & Bidirectional Sync
 
-**Goal**: FinOS as the **source of truth** for all financial data, with bidirectional sync to external systems.
+**Goal**: Raven as the **source of truth** for all financial data, with bidirectional sync to external systems.
 
 ### 4.1 Data Model
 
@@ -176,7 +176,7 @@
 ### 4.2 Sync Architecture
 
 ```
-External Systems                    FinOS Control Plane
+External Systems                    Raven Control Plane
 +-----------+                       +------------------+
 | Tally     | <--- Sync Agent --->  | Unified Ledger   |
 | Zoho      | <--- Sync Agent --->  | (Source of Truth) |
@@ -215,7 +215,7 @@ External Systems                    FinOS Control Plane
 - [ ] Conflict resolution: "Tally says $5,000, Stripe says $4,980 — likely FX difference, auto-adjust?"
 - [ ] Sync health monitoring: detect drift, alert on failures, auto-retry with backoff
 - [ ] Data enrichment: auto-categorize imported transactions using LLM
-- [ ] Schema mapping: learn field mappings between FinOS and external systems
+- [ ] Schema mapping: learn field mappings between Raven and external systems
 
 ---
 

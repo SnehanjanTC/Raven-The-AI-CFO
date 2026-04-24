@@ -1,481 +1,350 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Settings as SettingsIcon,
-  Shield,
-  Bell,
-  RefreshCw,
-  ChevronRight,
+  User as UserIcon,
+  KeyRound,
+  Database,
+  LogOut,
+  Save,
+  Trash2,
   Check,
-  Key,
   Eye,
   EyeOff,
-  Database,
-  Globe,
-  Lock,
-  PackagePlus,
-  Trash2,
-  Sparkles
+  ShieldCheck,
+  Sparkles,
+  AlertCircle,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { api } from '@/lib/api';
-import { AIProvider, getAIConfig, setAIKey, setAIProvider, AI_PROVIDERS } from '@/lib/ai';
-import { DetailModal, DetailStat } from '@/components/DetailModal';
-import { isDemoDataLoaded, loadDemoData, clearDemoData, getDemoSummary, getDemoTeam, onDemoDataChange, getNotificationPrefs, setNotificationPref, NotificationPrefs } from '@/lib/demo-data';
+import { useAuth } from '@/shared/contexts';
+import {
+  isDemoDataLoaded,
+  loadDemoData,
+  clearDemoData,
+  onDemoDataChange,
+} from '@/lib/demo-data';
 
-const statusDot = (status: string) => {
-  if (status.toLowerCase().includes('connected') || status.toLowerCase().includes('ok') || status.toLowerCase().includes('synced') || status.toLowerCase().includes('ms'))
-    return 'bg-tertiary';
-  if (status.toLowerCase().includes('checking') || status.toLowerCase().includes('loading'))
-    return 'bg-yellow-400 animate-pulse';
-  return 'bg-error';
-};
+type Tab = 'profile' | 'ai' | 'data';
 
-const statusColor = (status: string) => {
-  if (status.toLowerCase().includes('connected') || status.toLowerCase().includes('ok') || status.toLowerCase().includes('synced') || status.toLowerCase().includes('ms'))
-    return 'text-tertiary';
-  if (status.toLowerCase().includes('checking') || status.toLowerCase().includes('loading'))
-    return 'text-yellow-400';
-  return 'text-error';
-};
+const ANTHROPIC_KEY_STORAGE = 'raven_anthropic_key';
 
 export function Settings() {
-  const [config, setConfig] = useState(getAIConfig());
-  const [showKeys, setShowKeys] = useState<Record<string, boolean>>({});
-  const [resetting, setResetting] = React.useState(false);
-  const [selectedProvider, setSelectedProvider] = useState<typeof providers[0] | null>(null);
-  const [selectedAudit, setSelectedAudit] = useState<{ label: string; status: string; time: string } | null>(null);
-  const [keys, setKeys] = useState<{ [key in AIProvider]: string }>({
-    openai: localStorage.getItem('finos_openai_key') || '',
-    anthropic: localStorage.getItem('finos_anthropic_key') || '',
-    gemini: localStorage.getItem('finos_gemini_key') || '',
-    grok: localStorage.getItem('finos_grok_key') || '',
-  });
-
-  // Demo data state
-  const [demoLoaded, setDemoLoaded] = useState(isDemoDataLoaded());
-  const [demoLoading, setDemoLoading] = useState(false);
-  const [demoClearing, setDemoClearing] = useState(false);
-
-  // Notification preferences state
-  const [notifPrefs, setNotifPrefs] = useState<NotificationPrefs>(getNotificationPrefs());
-
-  // System status state
-  const [auditStats, setAuditStats] = useState([
-    { label: 'Cloud Handshake', status: 'Checking...', time: 'Checking...', lastCheck: new Date().toISOString() },
-    { label: 'SIF Knowledge Sync', status: 'Checking...', time: 'Checking...', lastCheck: new Date().toISOString() },
-    { label: 'Model Response Latency', status: 'Checking...', time: 'Checking...', lastCheck: new Date().toISOString() }
-  ]);
-
-  useEffect(() => {
-    const unsub = onDemoDataChange(() => setDemoLoaded(isDemoDataLoaded()));
-    return unsub;
-  }, []);
-
-  // Measure backend health
-  useEffect(() => {
-    const measureCloudHealth = async () => {
-      let healthCheckSuccess = false;
-      let latency = 0;
-
-      // Try FastAPI backend health check
-      try {
-        const start = performance.now();
-        const response = await fetch('/api/health');
-        latency = Math.round(performance.now() - start);
-        if (response.ok) {
-          healthCheckSuccess = true;
-        }
-      } catch {
-        // Backend health check failed
-      }
-
-      setAuditStats(prev => prev.map(stat =>
-        stat.label === 'Cloud Handshake'
-          ? {
-              ...stat,
-              status: healthCheckSuccess ? 'Optimal' : 'Offline',
-              time: healthCheckSuccess ? `${latency}ms` : '-'
-            }
-          : stat
-      ));
-    };
-    measureCloudHealth();
-  }, []);
-
-  // Update SIF Knowledge Sync status based on backend API or demo data
-  useEffect(() => {
-    const checkDataAvailability = async () => {
-      let dataAvailable = false;
-
-      // Try to check backend data availability
-      try {
-        const summary = await api.dashboard.summary();
-        if (summary && Object.keys(summary).length > 0) {
-          dataAvailable = true;
-        }
-      } catch {
-        // API check failed, fall back to demo data check
-      }
-
-      // Fall back to demo data check if API check failed
-      if (!dataAvailable) {
-        dataAvailable = isDemoDataLoaded();
-      }
-
-      setAuditStats(prev => prev.map(stat =>
-        stat.label === 'SIF Knowledge Sync'
-          ? {
-              ...stat,
-              status: dataAvailable ? 'Active' : 'No Data',
-              time: dataAvailable ? new Date().toLocaleTimeString() : '-'
-            }
-          : stat
-      ));
-    };
-
-    checkDataAvailability();
-  }, [demoLoaded]);
-
-  // Check for AI key to determine Model Response Latency status
-  useEffect(() => {
-    const hasAIKey = Object.values(keys).some(k => k.trim().length > 0);
-    setAuditStats(prev => prev.map(stat =>
-      stat.label === 'Model Response Latency'
-        ? { ...stat, status: hasAIKey ? 'Ready' : 'No Key', time: hasAIKey ? '1.4s' : '-' }
-        : stat
-    ));
-  }, [keys]);
-
-  const handleLoadDemo = () => {
-    setDemoLoading(true);
-    loadDemoData();
-    setDemoLoaded(true);
-    setDemoLoading(false);
-  };
-
-  const handleClearDemo = () => {
-    setDemoClearing(true);
-    clearDemoData();
-    setDemoLoaded(false);
-    setDemoClearing(false);
-  };
-
-  const providers = AI_PROVIDERS;
-
-  const handleProviderChange = (id: AIProvider) => {
-    setAIProvider(id);
-    setConfig(prev => ({ ...prev, provider: id }));
-  };
-
-  const handleKeyChange = (provider: AIProvider, value: string) => {
-    setKeys(prev => ({ ...prev, [provider]: value }));
-    setAIKey(provider, value);
-  };
-
-  const toggleKeyVisibility = (id: string) => {
-    setShowKeys(prev => ({ ...prev, [id]: !prev[id] }));
-  };
-
-  const handleSystemReset = async () => {
-    if (confirm('Are you sure you want to reset the system? This will clear local preferences and sync with default backend state.')) {
-      setResetting(true);
-      localStorage.clear();
-      window.location.reload();
-    }
-  };
+  const { user, isGuest, signOut } = useAuth();
+  const [tab, setTab] = useState<Tab>('profile');
 
   return (
-    <div className="space-y-8 pb-20 max-w-5xl animate-fade-in">
-      <section className="space-y-2">
-        <h1 className="font-headline text-3xl md:text-4xl font-extrabold text-white tracking-tight">Settings</h1>
-        <p className="text-slate-400 text-sm">Configuration and preferences</p>
-      </section>
+    <div className="max-w-5xl mx-auto pt-6">
+      <header className="mb-6">
+        <h1 className="text-2xl font-semibold text-slate-100">Settings</h1>
+        <p className="text-sm text-slate-400 mt-1">
+          Manage your account, AI provider keys, and local data.
+        </p>
+      </header>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Left Column */}
-        <div className="lg:col-span-8 space-y-6">
-          {/* Profile Section */}
-          <section className="glass-panel rounded-2xl p-6">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center">
-                <SettingsIcon className="w-5 h-5 text-primary" />
-              </div>
-              <h2 className="text-lg font-bold text-white">AI Engine Selection</h2>
-            </div>
+      <div className="flex flex-col md:flex-row gap-6">
+        <nav className="md:w-56 shrink-0 flex md:flex-col gap-1">
+          <TabButton active={tab === 'profile'} onClick={() => setTab('profile')} icon={<UserIcon className="h-4 w-4" />} label="Profile & Account" />
+          <TabButton active={tab === 'ai'} onClick={() => setTab('ai')} icon={<KeyRound className="h-4 w-4" />} label="AI & API Keys" />
+          <TabButton active={tab === 'data'} onClick={() => setTab('data')} icon={<Database className="h-4 w-4" />} label="Data & Preferences" />
+        </nav>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {providers.map((p) => (
-                <button
-                  key={p.id}
-                  onClick={() => handleProviderChange(p.id)}
-                  aria-pressed={config.provider === p.id}
-                  className={cn(
-                    "p-4 rounded-xl border transition-all text-left relative",
-                    config.provider === p.id
-                      ? "bg-primary/10 border-primary/30"
-                      : "bg-white/5 border-white/10 hover:border-white/20"
-                  )}
-                >
-                  {config.provider === p.id && (
-                    <div className="absolute top-3 right-3 w-5 h-5 bg-primary rounded-full flex items-center justify-center">
-                      <Check className="w-3 h-3 text-on-primary" />
-                    </div>
-                  )}
-                  <h3 className="font-bold text-on-surface text-sm">{p.name}</h3>
-                  <p className="text-xs text-slate-500 mt-1">{p.desc}</p>
-                </button>
-              ))}
-            </div>
-          </section>
-
-          {/* API Keys Section */}
-          <section className="glass-panel rounded-2xl p-6">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center">
-                <Key className="w-5 h-5 text-primary" />
-              </div>
-              <div className="flex-1">
-                <h2 className="text-lg font-bold text-white">API Keys</h2>
-                <p className="text-xs text-slate-500 mt-0.5">Hardware encrypted, stored locally</p>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {providers.map(p => (
-                <div key={p.id} className="space-y-2">
-                  <div className="flex justify-between items-center">
-                    <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">{p.name} Key</label>
-                    {keys[p.id] && <span className="w-1.5 h-1.5 rounded-full bg-tertiary"></span>}
-                  </div>
-                  <div className="relative">
-                    <input
-                      type={showKeys[p.id] ? "text" : "password"}
-                      value={keys[p.id]}
-                      onChange={(e) => handleKeyChange(p.id, e.target.value)}
-                      placeholder="sk-••••••••••••"
-                      className="w-full bg-white/[0.04] border border-white/[0.06] rounded-xl pl-4 pr-10 py-3 text-xs text-on-surface placeholder:text-slate-600 focus:outline-none focus:ring-1 focus:ring-primary/40 transition-all font-mono"
-                    />
-                    <button
-                      onClick={() => toggleKeyVisibility(p.id)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white transition-colors"
-                    >
-                      {showKeys[p.id] ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </section>
-
-          {/* System Health Section */}
-          <section className="glass-panel rounded-2xl p-6">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 rounded-xl bg-tertiary/20 flex items-center justify-center">
-                <Shield className="w-5 h-5 text-tertiary" />
-              </div>
-              <h2 className="text-lg font-bold text-white">System Health</h2>
-            </div>
-
-            <div className="space-y-3">
-              {auditStats.map(stat => (
-                <div key={stat.label} onClick={() => setSelectedAudit(stat)} className="flex items-center justify-between p-3 bg-white/[0.04] rounded-xl border border-white/[0.06] cursor-pointer hover:bg-white/[0.06] transition-all">
-                  <div className="flex items-center gap-3">
-                    <span className="text-sm text-on-surface font-medium">{stat.label}</span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div className={cn("w-2 h-2 rounded-full", statusDot(stat.status))}></div>
-                    <span className={cn("text-xs font-bold uppercase tracking-wider", statusColor(stat.status))}>{stat.status}</span>
-                    <span className="text-xs text-slate-500 font-bold">{stat.time}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </section>
-        </div>
-
-        {/* Right Column */}
-        <div className="lg:col-span-4 space-y-6">
-          {/* Alerts Section */}
-          <section className="glass-panel rounded-2xl p-6">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center">
-                <Bell className="w-5 h-5 text-primary" />
-              </div>
-              <h2 className="text-lg font-bold text-white">Intelligence Alerts</h2>
-            </div>
-            <div className="space-y-5">
-              {[
-                { key: 'burnRateSpikes' as const, label: 'Burn Rate Spikes', desc: 'Notify when variance > 10%' },
-                { key: 'runwayHealth' as const, label: 'Runway Health', desc: 'Alert when critical < 3mo' },
-                { key: 'agentAnomalies' as const, label: 'Agent Anomalies', desc: 'Flag divergent strategies' },
-                { key: 'complianceDeadlines' as const, label: 'Compliance Deadlines', desc: 'Upcoming filing dates' },
-                { key: 'paymentReminders' as const, label: 'Payment Reminders', desc: 'Invoice and bill alerts' }
-              ].map(pref => (
-                <div key={pref.key} className="flex justify-between items-start gap-3">
-                  <div>
-                    <p className="text-xs text-on-surface font-bold">{pref.label}</p>
-                    <p className="text-xs text-slate-500 mt-0.5">{pref.desc}</p>
-                  </div>
-                  <button
-                    role="switch"
-                    aria-checked={notifPrefs[pref.key]}
-                    aria-label={pref.label}
-                    onClick={() => {
-                      const newPrefs = setNotificationPref(pref.key, !notifPrefs[pref.key]);
-                      setNotifPrefs(newPrefs);
-                    }}
-                    className={cn(
-                      "w-9 h-5 rounded-full p-1 cursor-pointer transition-colors shrink-0 mt-0.5",
-                      notifPrefs[pref.key] ? "bg-primary" : "bg-surface-container-highest"
-                    )}
-                  >
-                    <div className={cn(
-                      "w-3 h-3 bg-white rounded-full shadow-sm transition-transform",
-                      notifPrefs[pref.key] ? "translate-x-4" : "translate-x-0"
-                    )}></div>
-                  </button>
-                </div>
-              ))}
-            </div>
-          </section>
-
-          {/* Demo Data Manager */}
-          <section className={cn(
-            "rounded-2xl p-6 transition-all",
-            demoLoaded
-              ? "glass-panel"
-              : "glass-card"
-          )}>
-            <div className="flex items-center gap-3 mb-4">
-              <div className={cn(
-                "w-10 h-10 rounded-xl flex items-center justify-center",
-                demoLoaded ? "bg-tertiary/20" : "bg-primary/20"
-              )}>
-                {demoLoaded
-                  ? <Sparkles className="w-5 h-5 text-tertiary" />
-                  : <PackagePlus className="w-5 h-5 text-primary" />
-                }
-              </div>
-              <div>
-                <h2 className="text-lg font-bold text-white">Demo Data</h2>
-                <p className="text-[10px] text-slate-500 uppercase tracking-wider font-bold">
-                  {demoLoaded ? 'Active' : 'Not loaded'}
-                </p>
-              </div>
-            </div>
-
-            <p className="text-xs text-slate-400 leading-relaxed mb-4">
-              {demoLoaded
-                ? (() => {
-                    const s = getDemoSummary();
-                    const teamCount = getDemoTeam().length;
-                    return `Live: ₹${(s.cashBalance / 10000000).toFixed(1)}Cr cash, ${teamCount} team members.`;
-                  })()
-                : 'Load sample Indian SaaS startup data across all features.'}
-            </p>
-
-            {demoLoaded && (
-              <div className="grid grid-cols-2 gap-2 mb-4">
-                {(() => {
-                  const s = getDemoSummary();
-                  return [
-                    { label: 'Cash', value: `₹${(s.cashBalance / 10000000).toFixed(1)}Cr` },
-                    { label: 'MRR', value: `₹${(s.mrr / 100000).toFixed(1)}L` },
-                    { label: 'Burn', value: `₹${(s.monthlyBurn / 100000).toFixed(1)}L/mo` },
-                    { label: 'Runway', value: `${s.runway.toFixed(0)} mo` },
-                  ].map(item => (
-                    <div key={item.label} className="bg-white/5 rounded-lg px-3 py-2">
-                      <p className="text-[10px] text-slate-500 font-bold uppercase">{item.label}</p>
-                      <p className="text-sm font-bold text-on-surface">{item.value}</p>
-                    </div>
-                  ));
-                })()}
-              </div>
-            )}
-
-            {demoLoaded ? (
-              <button
-                onClick={handleClearDemo}
-                disabled={demoClearing}
-                className="w-full py-2.5 bg-error/10 text-error rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-error hover:text-white transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2"
-              >
-                {demoClearing ? (
-                  <><RefreshCw className="w-3.5 h-3.5 animate-spin" /> Clearing...</>
-                ) : (
-                  <><Trash2 className="w-3.5 h-3.5" /> Clear Demo Data</>
-                )}
-              </button>
-            ) : (
-              <button
-                onClick={handleLoadDemo}
-                disabled={demoLoading}
-                className="w-full py-2.5 bg-primary text-on-primary rounded-xl text-xs font-bold uppercase tracking-wider hover:opacity-90 transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2"
-              >
-                {demoLoading ? (
-                  <><RefreshCw className="w-3.5 h-3.5 animate-spin" /> Loading...</>
-                ) : (
-                  <><PackagePlus className="w-3.5 h-3.5" /> Load Demo Data</>
-                )}
-              </button>
-            )}
-          </section>
-
-          {/* Platform Reset */}
-          <section className="glass-subtle rounded-2xl p-6">
-            <div>
-              <div className="flex items-center gap-3 mb-3">
-                <RefreshCw className={cn("w-5 h-5 text-error", resetting && "animate-spin")} />
-                <h2 className="text-lg font-bold text-error">Platform Reset</h2>
-              </div>
-              <p className="text-xs text-slate-400 leading-relaxed mb-4">
-                Clear local encryption keys and cached intelligence. Use only for severe sync issues.
-              </p>
-            </div>
-            <button
-              onClick={handleSystemReset}
-              disabled={resetting}
-              className="w-full py-2.5 bg-error/10 text-error rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-error hover:text-white transition-all active:scale-95 disabled:opacity-50"
-            >
-              {resetting ? 'Resetting...' : 'Execute Reset'}
-            </button>
-          </section>
-        </div>
+        <section className="flex-1 min-w-0">
+          {tab === 'profile' && <ProfilePanel user={user} isGuest={isGuest} signOut={signOut} />}
+          {tab === 'ai' && <AIKeyPanel />}
+          {tab === 'data' && <DataPanel />}
+        </section>
       </div>
-      {/* Audit Trail Detail Modal */}
-      <DetailModal
-        isOpen={!!selectedAudit}
-        onClose={() => setSelectedAudit(null)}
-        title={selectedAudit?.label || ''}
-        subtitle="Platform audit details"
-        icon={<Shield className="w-5 h-5" />}
-        size="sm"
-      >
-        {selectedAudit && (
-          <div className="space-y-5">
-            <div className="grid grid-cols-2 gap-4">
-              <DetailStat label="Status" value={selectedAudit.status} color="text-tertiary" />
-              <DetailStat label="Response" value={selectedAudit.time} />
-            </div>
-            <div className="bg-surface-container-high/50 rounded-xl p-4 border border-white/5">
-              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Health Check</p>
-              <div className="space-y-2">
-                <div className="flex items-center gap-2 text-xs text-slate-400">
-                  <Check className="w-3.5 h-3.5 text-tertiary" />
-                  <span>Service is responsive and healthy</span>
-                </div>
-                <div className="flex items-center gap-2 text-xs text-slate-400">
-                  <Check className="w-3.5 h-3.5 text-tertiary" />
-                  <span>Last verified: just now</span>
-                </div>
-                <div className="flex items-center gap-2 text-xs text-slate-400">
-                  <Check className="w-3.5 h-3.5 text-tertiary" />
-                  <span>Uptime: 99.97% (30d)</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-      </DetailModal>
     </div>
   );
 }
+
+function TabButton({
+  active,
+  onClick,
+  icon,
+  label,
+}: {
+  active: boolean;
+  onClick: () => void;
+  icon: React.ReactNode;
+  label: string;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={cn(
+        'flex items-center gap-2 px-3 py-2 rounded-lg text-sm',
+        'transition-colors',
+        active
+          ? 'bg-white/[0.06] text-slate-100 border border-white/[0.08]'
+          : 'text-slate-400 hover:text-slate-200 hover:bg-white/[0.03] border border-transparent'
+      )}
+    >
+      {icon}
+      <span>{label}</span>
+    </button>
+  );
+}
+
+function Card({ title, description, children }: { title: string; description?: string; children: React.ReactNode }) {
+  return (
+    <div className="bg-white/[0.02] border border-white/[0.06] rounded-xl p-5 mb-4">
+      <div className="mb-4">
+        <h2 className="text-base font-semibold text-slate-100">{title}</h2>
+        {description && <p className="text-xs text-slate-400 mt-1">{description}</p>}
+      </div>
+      {children}
+    </div>
+  );
+}
+
+function Field({ label, value }: { label: string; value: React.ReactNode }) {
+  return (
+    <div className="flex items-start justify-between py-2 border-b border-white/[0.04] last:border-b-0">
+      <span className="text-xs uppercase tracking-wide text-slate-500">{label}</span>
+      <span className="text-sm text-slate-200">{value}</span>
+    </div>
+  );
+}
+
+function ProfilePanel({ user, isGuest, signOut }: { user: any; isGuest: boolean; signOut: () => Promise<void> }) {
+  const initials = (() => {
+    const name = user?.full_name || user?.email || (isGuest ? 'Guest' : 'U');
+    const parts = name.split(/[\s@]/);
+    return (parts[0]?.[0] + (parts[1]?.[0] || '')).toUpperCase();
+  })();
+
+  return (
+    <>
+      <Card title="Account" description="Your signed-in identity and session details.">
+        <div className="flex items-center gap-4 mb-4">
+          <div className="h-14 w-14 rounded-full bg-gradient-to-br from-[#00F0A0] to-[#00CC88] flex items-center justify-center text-base font-semibold text-black">
+            {initials}
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-slate-100">
+              {user?.full_name || (isGuest ? 'Guest User' : 'User')}
+            </p>
+            <p className="text-xs text-slate-400 mt-0.5">
+              {user?.email || (isGuest ? 'Demo session — no account' : '—')}
+            </p>
+          </div>
+        </div>
+
+        <div className="divide-y divide-white/[0.04]">
+          <Field label="Email" value={user?.email || '—'} />
+          <Field label="Full name" value={user?.full_name || '—'} />
+          <Field label="Company" value={user?.company_name || '—'} />
+          <Field label="Stage" value={user?.startup_stage || '—'} />
+          <Field
+            label="Session"
+            value={
+              <span className={cn(
+                'inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-xs',
+                isGuest ? 'bg-amber-500/10 text-amber-300 border border-amber-500/20'
+                        : 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/20'
+              )}>
+                <ShieldCheck className="h-3 w-3" />
+                {isGuest ? 'Guest mode' : 'Authenticated'}
+              </span>
+            }
+          />
+        </div>
+      </Card>
+
+      {isGuest && (
+        <Card title="Upgrade from guest" description="Create an account to persist data across devices.">
+          <p className="text-sm text-slate-400 mb-3">
+            You're currently browsing with demo data only. Sign out and register to get a real workspace.
+          </p>
+          <button
+            onClick={async () => { await signOut(); }}
+            className="px-3 py-2 rounded-lg bg-[#00F0A0] hover:bg-[#00D890] text-black text-sm font-medium transition"
+          >
+            Create account
+          </button>
+        </Card>
+      )}
+
+      <Card title="Sign out" description="End your current session on this device.">
+        <button
+          onClick={async () => { await signOut(); }}
+          className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-red-500/20 bg-red-500/10 hover:bg-red-500/20 text-red-300 text-sm transition"
+        >
+          <LogOut className="h-4 w-4" />
+          Sign out
+        </button>
+      </Card>
+    </>
+  );
+}
+
+function AIKeyPanel() {
+  const envKey = (import.meta as any).env?.VITE_ANTHROPIC_API_KEY || '';
+  const hasEnvKey = !!envKey && !envKey.includes('your-') && envKey !== 'sk-ant-...';
+
+  const [key, setKey] = useState(() => localStorage.getItem(ANTHROPIC_KEY_STORAGE) || '');
+  const [reveal, setReveal] = useState(false);
+  const [saved, setSaved] = useState(false);
+
+  const save = () => {
+    const trimmed = key.trim();
+    if (trimmed) localStorage.setItem(ANTHROPIC_KEY_STORAGE, trimmed);
+    else localStorage.removeItem(ANTHROPIC_KEY_STORAGE);
+    setSaved(true);
+    setTimeout(() => setSaved(false), 1500);
+  };
+
+  const clear = () => {
+    setKey('');
+    localStorage.removeItem(ANTHROPIC_KEY_STORAGE);
+    setSaved(true);
+    setTimeout(() => setSaved(false), 1500);
+  };
+
+  return (
+    <>
+      <Card
+        title="Anthropic Claude API Key"
+        description="Used by the Copilot and AI-powered features. Stored locally in your browser."
+      >
+        {hasEnvKey && (
+          <div className="mb-3 px-3 py-2 rounded-lg bg-emerald-500/5 border border-emerald-500/20 flex items-center gap-2 text-xs text-emerald-300">
+            <Check className="h-3.5 w-3.5" />
+            A key is already configured via <code className="font-mono">VITE_ANTHROPIC_API_KEY</code>. The env key takes precedence.
+          </div>
+        )}
+
+        <label className="block text-xs uppercase tracking-wide text-slate-500 mb-2">API Key</label>
+        <div className="flex gap-2">
+          <div className="flex-1 relative">
+            <input
+              type={reveal ? 'text' : 'password'}
+              value={key}
+              onChange={(e) => setKey(e.target.value)}
+              placeholder="sk-ant-..."
+              className="w-full px-3 py-2 pr-10 rounded-lg bg-white/[0.03] border border-white/[0.08] text-sm text-slate-100 placeholder:text-slate-600 focus:outline-none focus:border-[#00F0A0]/40"
+            />
+            <button
+              type="button"
+              onClick={() => setReveal(!reveal)}
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300"
+              aria-label={reveal ? 'Hide key' : 'Reveal key'}
+            >
+              {reveal ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </button>
+          </div>
+          <button
+            onClick={save}
+            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-[#00F0A0] hover:bg-[#00D890] text-black text-sm font-medium transition"
+          >
+            {saved ? <Check className="h-4 w-4" /> : <Save className="h-4 w-4" />}
+            {saved ? 'Saved' : 'Save'}
+          </button>
+          {key && (
+            <button
+              onClick={clear}
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-white/[0.08] bg-white/[0.03] hover:bg-white/[0.06] text-slate-300 text-sm transition"
+            >
+              <Trash2 className="h-4 w-4" />
+            </button>
+          )}
+        </div>
+
+        <p className="text-xs text-slate-500 mt-3 flex items-start gap-1.5">
+          <AlertCircle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+          Keys are stored only in this browser's localStorage. Clear on shared machines. Get a key at{' '}
+          <a href="https://console.anthropic.com" target="_blank" rel="noreferrer" className="text-[#00F0A0] hover:underline">
+            console.anthropic.com
+          </a>
+          .
+        </p>
+      </Card>
+
+      <Card title="AI provider" description="Raven currently supports Anthropic Claude. Other providers coming soon.">
+        <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-white/[0.03] border border-white/[0.06]">
+          <Sparkles className="h-4 w-4 text-[#00F0A0]" />
+          <div className="flex-1">
+            <p className="text-sm text-slate-200">Anthropic Claude</p>
+            <p className="text-xs text-slate-500">claude-opus / claude-sonnet</p>
+          </div>
+          <span className="text-xs px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-300 border border-emerald-500/20">
+            Active
+          </span>
+        </div>
+      </Card>
+    </>
+  );
+}
+
+function DataPanel() {
+  const [demoLoaded, setDemoLoaded] = useState(isDemoDataLoaded());
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    return onDemoDataChange(() => setDemoLoaded(isDemoDataLoaded()));
+  }, []);
+
+  const toggle = async () => {
+    setBusy(true);
+    try {
+      if (demoLoaded) clearDemoData();
+      else loadDemoData();
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const clearLocal = () => {
+    const confirmed = window.confirm(
+      'Clear all locally cached data (demo data, AI key, guest session)? You will be signed out.'
+    );
+    if (!confirmed) return;
+    localStorage.clear();
+    window.location.href = '/login';
+  };
+
+  return (
+    <>
+      <Card title="Demo data" description="Populate the app with example metrics, transactions, and team data.">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm text-slate-200">
+              Demo data is currently{' '}
+              <span className={demoLoaded ? 'text-[#00F0A0]' : 'text-slate-400'}>
+                {demoLoaded ? 'loaded' : 'not loaded'}
+              </span>
+            </p>
+            <p className="text-xs text-slate-500 mt-1">
+              {demoLoaded
+                ? 'Clear to see the empty state and connect real sources.'
+                : 'Load to explore the product without connecting any integrations.'}
+            </p>
+          </div>
+          <button
+            onClick={toggle}
+            disabled={busy}
+            className={cn(
+              'px-3 py-2 rounded-lg text-sm font-medium transition',
+              demoLoaded
+                ? 'border border-white/[0.08] bg-white/[0.03] hover:bg-white/[0.06] text-slate-200'
+                : 'bg-[#00F0A0] hover:bg-[#00D890] text-black'
+            )}
+          >
+            {demoLoaded ? 'Clear demo data' : 'Load demo data'}
+          </button>
+        </div>
+      </Card>
+
+      <Card title="Danger zone" description="Reset everything stored by Raven in this browser.">
+        <button
+          onClick={clearLocal}
+          className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-red-500/20 bg-red-500/10 hover:bg-red-500/20 text-red-300 text-sm transition"
+        >
+          <Trash2 className="h-4 w-4" />
+          Clear all local data
+        </button>
+      </Card>
+    </>
+  );
+}
+
+export default Settings;

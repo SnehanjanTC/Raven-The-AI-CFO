@@ -1,4 +1,4 @@
-# FinOS Backend API Endpoints
+# Raven Backend API Endpoints
 
 All endpoints are prefixed with `/api/v1`
 
@@ -85,10 +85,10 @@ All endpoints are prefixed with `/api/v1`
 - `GET /unread-count` - Get unread notification count (requires auth)
 
 ## AI Proxy (`/ai`)
-- `POST /chat` - Send chat request to AI provider (requires auth)
-  - Supports OpenAI, Anthropic, Google Gemini
-  - Automatic fallback through providers
+- `POST /chat` - Send chat request to Claude API (requires auth)
+  - Powered by Anthropic Claude
   - Server-side API key management
+  - Streaming responses
 
 ## Team/Employees (`/team`)
 - `GET /` - List employees (requires auth)

@@ -384,7 +384,7 @@ export function Ledger() {
               </>
             )}
             {!zohoEmpty && dataSource === 'zoho' && <span>Live data from Zoho Books MCP · {transactions.length} invoices</span>}
-            {dataSource === 'backend' && <span>FinOS backend · {transactions.length} transactions</span>}
+            {dataSource === 'backend' && <span>Raven backend · {transactions.length} transactions</span>}
             {dataSource === 'demo' && <span>Demo dataset (manually loaded from Settings) · {transactions.length} sample transactions</span>}
             {dataSource === 'empty' && <span>No data source connected. Link Zoho Books in Integrations or load demo data from Settings.</span>}
           </div>

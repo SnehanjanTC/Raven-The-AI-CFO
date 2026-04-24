@@ -8,7 +8,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Report as ReportInterface, ReportMetric } from '@/types';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 import { DetailModal, DetailStat, DetailProgress } from '@/components/DetailModal';
 import { isDemoDataLoaded, getDemoExpenseBreakdown, getDemoSummary, formatCurrency } from '@/lib/demo-data';
@@ -176,7 +176,7 @@ export function Reports() {
               <div className="flex justify-between items-start mb-6">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center"><Sparkles className="w-6 h-6 text-primary fill-current" /></div>
-                  <div><h3 className="text-xl font-headline font-bold text-white">AI Auditor Insight</h3><p className="text-xs text-slate-500">Anomaly detection powered by FINOS AI</p></div>
+                  <div><h3 className="text-xl font-headline font-bold text-white">AI Auditor Insight</h3><p className="text-xs text-slate-500">Anomaly detection powered by Raven AI</p></div>
                 </div>
                 <button onClick={() => setIsDiscrepancyOpen(false)} className="text-slate-500 hover:text-white transition-colors"><PlusCircle className="w-6 h-6 rotate-45" /></button>
               </div>
@@ -224,7 +224,7 @@ export function Reports() {
       </AnimatePresence>
 
       {/* ── Page Header ────────────────────────────────────────── */}
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div>
           <h1 className="text-4xl md:text-5xl font-headline font-extrabold tracking-tight text-on-surface mb-2">Reports</h1>
           <p className="text-on-surface-variant text-sm max-w-xl">Indian GAAP / Schedule III compliant financial reports with AI insights, version control, and multi-format export</p>
@@ -234,12 +234,12 @@ export function Reports() {
           {generating ? <RefreshCw className="w-4 h-4 animate-spin" /> : <PlusCircle className="w-4 h-4" />}
           {generating ? 'Generating...' : 'Generate Report'}
         </motion.button>
-      </motion.div>
+      </div>
 
       {/* ── Quick Export + AI Auditor Row ──────────────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Quick Export */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }} className="lg:col-span-2 glass-card rounded-2xl p-6 border border-white/[0.08]">
+        <div className="lg:col-span-2 glass-card rounded-2xl p-6 border border-white/[0.08]">
           <h3 className="text-sm font-bold text-on-surface mb-4">Quick Export</h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             {[
@@ -266,10 +266,10 @@ export function Reports() {
             </div>
             <span className="text-[10px] text-slate-500">{filteredReports.length} reports</span>
           </div>
-        </motion.div>
+        </div>
 
         {/* AI Auditor Card */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="glass-panel rounded-2xl p-6 border border-primary/20 flex flex-col justify-between">
+        <div className="glass-panel rounded-2xl p-6 border border-primary/20 flex flex-col justify-between">
           <div>
             <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center"><Sparkles className="w-5 h-5 text-primary" /></div>
@@ -281,11 +281,11 @@ export function Reports() {
             className="w-full bg-primary/10 hover:bg-primary/20 text-primary py-2.5 rounded-lg text-xs font-bold transition-all border border-primary/20">
             Review Discrepancies
           </motion.button>
-        </motion.div>
+        </div>
       </div>
 
       {/* ── Search + Filter Bar ────────────────────────────────── */}
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.12 }} className="flex flex-col md:flex-row gap-3">
+      <div className="flex flex-col md:flex-row gap-3">
         {/* Search */}
         <div className="relative flex-1">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
@@ -301,10 +301,10 @@ export function Reports() {
             </button>
           ))}
         </div>
-      </motion.div>
+      </div>
 
       {/* ── Recent Cards ───────────────────────────────────────── */}
-      <motion.section initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
+      <section>
         <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-4">Recently Generated</h3>
         {loading ? (
           <div className="flex items-center justify-center py-16 text-slate-500 text-sm"><RefreshCw className="w-5 h-5 animate-spin mr-3" /> Loading reports...</div>
@@ -357,10 +357,10 @@ export function Reports() {
             })}
           </div>
         )}
-      </motion.section>
+      </section>
 
       {/* ── Reports Table ──────────────────────────────────────── */}
-      <motion.section initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+      <section>
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500">All Reports</h3>
           <span className="text-xs text-slate-500">{filteredReports.length} reports — Page {currentPage} of {totalPages}</span>
@@ -450,7 +450,7 @@ export function Reports() {
             </div>
           )}
         </div>
-      </motion.section>
+      </section>
 
       {/* ── Report Detail Modal (Enterprise-grade) ─────────────── */}
       <DetailModal isOpen={!!selectedReport} onClose={() => setSelectedReport(null)} title={selectedReport?.name || ''} subtitle={selectedReport?.type || ''} size="lg"

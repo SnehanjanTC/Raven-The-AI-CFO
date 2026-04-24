@@ -10,65 +10,26 @@ from app.schemas.ai import ChatRequest, ChatResponse
 
 router = APIRouter()
 
-# Provider endpoints and keys
-PROVIDERS = {
-    "openai": {
-        "url": "https://api.openai.com/v1/chat/completions",
-        "key_env": "OPENAI_API_KEY",
-        "model": "gpt-4",
-    },
-    "anthropic": {
-        "url": "https://api.anthropic.com/v1/messages",
-        "key_env": "ANTHROPIC_API_KEY",
-        "model": "claude-3-opus",
-    },
-    "gemini": {
-        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent",
-        "key_env": "GOOGLE_API_KEY",
-        "model": "gemini-pro",
-    },
-}
+# Claude API configuration
+CLAUDE_API_URL = "https://api.anthropic.com/v1/messages"
+CLAUDE_MODEL = "claude-3-5-sonnet-20241022"
+CLAUDE_API_VERSION = "2023-06-01"
 
 
-async def call_openai(messages: list, api_key: str, model: str = "gpt-4") -> Optional[str]:
-    """Call OpenAI API."""
+async def call_claude(messages: list, api_key: str, model: str = CLAUDE_MODEL, max_tokens: int = 4096) -> Optional[str]:
+    """Call Anthropic Claude API."""
     try:
         async with httpx.AsyncClient() as client:
             response = await client.post(
-                PROVIDERS["openai"]["url"],
-                headers={
-                    "Authorization": f"Bearer {api_key}",
-                    "Content-Type": "application/json",
-                },
-                json={
-                    "model": model,
-                    "messages": messages,
-                    "max_tokens": 1024,
-                },
-                timeout=30.0,
-            )
-            if response.status_code == 200:
-                data = response.json()
-                return data["choices"][0]["message"]["content"]
-    except Exception as e:
-        print(f"OpenAI error: {str(e)}")
-    return None
-
-
-async def call_anthropic(messages: list, api_key: str, model: str = "claude-3-opus") -> Optional[str]:
-    """Call Anthropic API."""
-    try:
-        async with httpx.AsyncClient() as client:
-            response = await client.post(
-                PROVIDERS["anthropic"]["url"],
+                CLAUDE_API_URL,
                 headers={
                     "x-api-key": api_key,
-                    "anthropic-version": "2023-06-01",
+                    "anthropic-version": CLAUDE_API_VERSION,
                     "content-type": "application/json",
                 },
                 json={
                     "model": model,
-                    "max_tokens": 1024,
+                    "max_tokens": max_tokens,
                     "messages": messages,
                 },
                 timeout=30.0,
@@ -76,36 +37,12 @@ async def call_anthropic(messages: list, api_key: str, model: str = "claude-3-op
             if response.status_code == 200:
                 data = response.json()
                 return data["content"][0]["text"]
+            else:
+                error_detail = await response.text()
+                raise Exception(f"Claude API error ({response.status_code}): {error_detail}")
     except Exception as e:
-        print(f"Anthropic error: {str(e)}")
-    return None
-
-
-async def call_gemini(messages: list, api_key: str, model: str = "gemini-pro") -> Optional[str]:
-    """Call Google Gemini API."""
-    try:
-        # Convert messages to Gemini format
-        contents = []
-        for msg in messages:
-            role = "user" if msg.get("role") == "user" else "model"
-            contents.append({
-                "role": role,
-                "parts": [{"text": msg.get("content", "")}],
-            })
-
-        async with httpx.AsyncClient() as client:
-            response = await client.post(
-                f"{PROVIDERS['gemini']['url']}?key={api_key}",
-                headers={"Content-Type": "application/json"},
-                json={"contents": contents},
-                timeout=30.0,
-            )
-            if response.status_code == 200:
-                data = response.json()
-                return data["candidates"][0]["content"]["parts"][0]["text"]
-    except Exception as e:
-        print(f"Gemini error: {str(e)}")
-    return None
+        print(f"Claude error: {str(e)}")
+        raise
 
 
 @router.post("/chat", response_model=ChatResponse)
@@ -114,63 +51,36 @@ async def chat(
     user: User = Depends(require_user),
 ):
     """
-    Proxy chat requests to appropriate AI provider.
-    Falls back through providers if one fails.
+    Proxy chat requests to Claude API.
     """
-    providers_to_try = []
+    # Get API key from settings
+    api_key = getattr(settings, "ANTHROPIC_API_KEY", None)
 
-    # Determine which providers to try
-    if request.provider:
-        providers_to_try = [request.provider.lower()]
-    else:
-        # Default priority order
-        providers_to_try = ["anthropic", "openai", "gemini"]
+    if not api_key:
+        raise HTTPException(
+            status_code=503,
+            detail="Claude API key is not configured. Please set ANTHROPIC_API_KEY in environment.",
+        )
+
+    # Build message list
+    messages = [msg.dict() for msg in request.messages]
 
     # Add system context if provided
-    messages = [msg.dict() for msg in request.messages]
     if request.context:
+        # Prepend system context as a user message (Claude doesn't have a native system role in v1/messages)
         messages.insert(0, {
-            "role": "system",
-            "content": request.context,
+            "role": "user",
+            "content": f"[SYSTEM CONTEXT]\n{request.context}\n\n[END SYSTEM CONTEXT]"
         })
 
-    # Try each provider
-    for provider in providers_to_try:
-        if provider not in PROVIDERS:
-            continue
-
-        provider_config = PROVIDERS[provider]
-        api_key = None
-
-        # Get API key from settings or environment
-        if provider == "openai":
-            api_key = getattr(settings, "OPENAI_API_KEY", None)
-        elif provider == "anthropic":
-            api_key = getattr(settings, "ANTHROPIC_API_KEY", None)
-        elif provider == "gemini":
-            api_key = getattr(settings, "GOOGLE_API_KEY", None)
-
-        if not api_key:
-            continue
-
-        # Call appropriate provider
-        response_text = None
-        if provider == "openai":
-            response_text = await call_openai(messages, api_key, provider_config["model"])
-        elif provider == "anthropic":
-            response_text = await call_anthropic(messages, api_key, provider_config["model"])
-        elif provider == "gemini":
-            response_text = await call_gemini(messages, api_key, provider_config["model"])
-
-        if response_text:
-            return ChatResponse(
-                content=response_text,
-                provider=provider,
-                tokens_used=None,
-            )
-
-    # If all providers fail
-    raise HTTPException(
-        status_code=503,
-        detail="All AI providers are unavailable. Please try again later.",
-    )
+    try:
+        response_text = await call_claude(messages, api_key)
+        return ChatResponse(
+            content=response_text,
+            tokens_used=None,  # Could be extended to track token usage if needed
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=503,
+            detail=f"Claude API error: {str(e)}",
+        )

@@ -1,4 +1,4 @@
--- Supabase Migration: FinOS Compliance System for Indian Tax & GAAP
+-- Supabase Migration: Raven Compliance System for Indian Tax & GAAP
 -- Created: 2026-03-30
 -- Version: 1.0.0
 -- Description: Complete schema for TDS, GST, Professional Tax, and Indian GAAP P&L compliance

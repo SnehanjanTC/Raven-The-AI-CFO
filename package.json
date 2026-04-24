@@ -1,5 +1,5 @@
 {
-  "name": "finos",
+  "name": "raven",
   "version": "1.0.0",
   "description": "Open-source AI-powered financial operating system for executive overview, autonomous agents, and strategic forecasting.",
   "license": "MIT",
@@ -24,8 +24,8 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "@google/generative-ai": "^0.24.1",
     "@rollup/rollup-linux-arm64-gnu": "^4.60.1",
+    "@sentry/react": "^10.50.0",
     "@supabase/supabase-js": "^2.100.1",
     "@tailwindcss/vite": "^4.1.14",
     "@vitejs/plugin-react": "^5.0.4",
@@ -55,6 +55,7 @@
     "autoprefixer": "^10.4.21",
     "jsdom": "^29.0.2",
     "tailwindcss": "^4.1.14",
+    "terser": "^5.46.2",
     "tsx": "^4.21.0",
     "typescript": "~5.8.2",
     "vite": "^6.2.0",

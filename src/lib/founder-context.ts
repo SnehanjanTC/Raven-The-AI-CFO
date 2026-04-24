@@ -39,7 +39,7 @@ const DEFAULT_PROFILE: StartupProfile = {
   currentFY: '2025-26'
 };
 
-const STORAGE_KEY = 'finos_startup_profile';
+const STORAGE_KEY = 'raven_startup_profile';
 
 // ── Compliance Relevance ─────────────────────────────────────────────────────
 

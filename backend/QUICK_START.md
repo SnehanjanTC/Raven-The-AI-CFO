@@ -1,9 +1,9 @@
-# FinOS Backend - Quick Start Guide
+# Raven Backend - Quick Start Guide
 
 ## Running the Server
 
 ```bash
-cd /sessions/kind-pensive-meitner/mnt/finos/backend
+cd /sessions/kind-pensive-meitner/mnt/raven/backend
 python -m uvicorn app.main:app --reload
 ```
 
@@ -233,17 +233,15 @@ Create a `.env` file in the backend directory:
 
 ```env
 # Database
-DATABASE_URL=postgresql+asyncpg://user:password@localhost/finos
+DATABASE_URL=postgresql+asyncpg://user:password@localhost/raven
 
 # Auth
 SECRET_KEY=your-secret-key-min-32-chars
 ALGORITHM=HS256
 ACCESS_TOKEN_EXPIRE_MINUTES=1440
 
-# AI Providers (optional, for chat endpoint)
-OPENAI_API_KEY=sk-...
+# AI Provider (optional, for chat endpoint)
 ANTHROPIC_API_KEY=sk-ant-...
-GOOGLE_API_KEY=...
 
 # Encryption
 ENCRYPTION_KEY=your-encryption-key-for-credentials

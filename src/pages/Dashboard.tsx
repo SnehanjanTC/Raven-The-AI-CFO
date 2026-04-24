@@ -9,13 +9,10 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  LineChart,
-  Line,
   AreaChart,
   Area
 } from 'recharts';
-import { Calendar, Download, TrendingUp, Flame, Plus, Clock, DollarSign, Wallet, BarChart3, X, Users, Receipt, AlertCircle } from 'lucide-react';
-import { MetricCard } from '@/components/MetricCard';
+import { Download, TrendingUp, Flame, Plus, Clock, DollarSign, Wallet, BarChart3, X, Users, AlertCircle } from 'lucide-react';
 import { DetailModal, DetailStat, DetailProgress } from '@/components/DetailModal';
 
 import { useMetrics } from '@/hooks/useMetrics';
@@ -33,7 +30,6 @@ const formatINRCompact = (n: number | undefined | null): string => {
 };
 import {
   isDemoDataLoaded,
-  getDemoDashboardMetrics,
   getDemoMrrTrend,
   getDemoCashFlow,
   getDemoExpenseBreakdown,
@@ -284,7 +280,7 @@ export function Dashboard() {
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `finos_dashboard_export_${timeframe}.csv`);
+    link.setAttribute("download", `raven_dashboard_export_${timeframe}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);

@@ -29,7 +29,7 @@ const AuthContext = createContext<AuthState | null>(null);
 export function AuthProvider({ children, onAuthChange }: { children: React.ReactNode; onAuthChange?: (user: User | null) => void }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const [isGuest, setIsGuest] = useState(localStorage.getItem('finos_guest_mode') === 'true');
+  const [isGuest, setIsGuest] = useState(localStorage.getItem('raven_guest_mode') === 'true');
 
   // Initialize auth on mount
   useEffect(() => {
@@ -43,9 +43,9 @@ export function AuthProvider({ children, onAuthChange }: { children: React.React
             setUser(userData as User);
             setIsGuest(userData.is_guest ?? false);
             if (userData.is_guest) {
-              localStorage.setItem('finos_guest_mode', 'true');
+              localStorage.setItem('raven_guest_mode', 'true');
             } else {
-              localStorage.removeItem('finos_guest_mode');
+              localStorage.removeItem('raven_guest_mode');
             }
             onAuthChange?.(userData as User);
           } catch (error: any) {
@@ -53,11 +53,11 @@ export function AuthProvider({ children, onAuthChange }: { children: React.React
             if (status === 401) {
               // Token is invalid, clear it
               api.clearToken();
-              localStorage.removeItem('finos_guest_mode');
+              localStorage.removeItem('raven_guest_mode');
               setUser(null);
               setIsGuest(false);
               onAuthChange?.(null);
-            } else if (isGuest || localStorage.getItem('finos_guest_mode') === 'true') {
+            } else if (isGuest || localStorage.getItem('raven_guest_mode') === 'true') {
               // Network error or backend unavailable in guest mode — keep guest session alive
               console.warn('Backend unreachable, continuing in guest mode');
               setIsGuest(true);
@@ -93,7 +93,7 @@ export function AuthProvider({ children, onAuthChange }: { children: React.React
       // Fetch user details after login
       const userData = await api.auth.me();
       setUser(userData as User);
-      localStorage.removeItem('finos_guest_mode');
+      localStorage.removeItem('raven_guest_mode');
       setIsGuest(false);
       onAuthChange?.(userData as User);
     } catch (error) {
@@ -115,7 +115,7 @@ export function AuthProvider({ children, onAuthChange }: { children: React.React
       // Fetch user details after registration
       const userData = await api.auth.me();
       setUser(userData as User);
-      localStorage.removeItem('finos_guest_mode');
+      localStorage.removeItem('raven_guest_mode');
       setIsGuest(false);
       onAuthChange?.(userData as User);
     } catch (error) {
@@ -132,7 +132,7 @@ export function AuthProvider({ children, onAuthChange }: { children: React.React
       // Fetch user details for guest
       const userData = await api.auth.me();
       setUser(userData as User);
-      localStorage.setItem('finos_guest_mode', 'true');
+      localStorage.setItem('raven_guest_mode', 'true');
       setIsGuest(true);
       onAuthChange?.(userData as User);
     } catch (error) {
@@ -147,7 +147,7 @@ export function AuthProvider({ children, onAuthChange }: { children: React.React
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
-      localStorage.removeItem('finos_guest_mode');
+      localStorage.removeItem('raven_guest_mode');
       setUser(null);
       setIsGuest(false);
       onAuthChange?.(null);

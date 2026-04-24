@@ -1,0 +1,55 @@
+services:
+  - type: web
+    name: raven-backend
+    env: docker
+    dockerfilePath: ./Dockerfile
+    region: oregon
+    plan: standard
+    scaling:
+      minInstances: 1
+      maxInstances: 3
+      targetMemoryUtilizationPercentage: 70
+      targetCPUUtilizationPercentage: 80
+
+    # Port configuration
+    port: 8000
+
+    # Health check
+    healthCheckPath: /api/v1/health
+    healthCheckInterval: 30
+    healthCheckTimeout: 3
+    healthCheckStartPeriod: 5
+
+    # Environment variables (Reference secrets using $SECRET_NAME syntax)
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+      - key: PYTHONUNBUFFERED
+        value: "1"
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_KEY
+        sync: false
+      - key: SUPABASE_JWT_SECRET
+        sync: false
+      - key: ALLOWED_ORIGINS
+        sync: false
+      - key: SECRET_KEY
+        sync: false
+      - key: ENCRYPTION_KEY
+        sync: false
+      - key: SENTRY_DSN
+        sync: false
+      - key: MONTHLY_TOKEN_LIMIT
+        value: "1000000"
+
+    # Build configuration
+    build:
+      builder: dockerfile
+      dockerfilePath: ./Dockerfile
+
+    # Startup and shutdown
+    startCommand: ""
+    autoDeploy: true

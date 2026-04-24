@@ -2,7 +2,7 @@
 
 ## Overview
 
-A comprehensive suite of production-grade filing workflow and compliance calendar UI components for FinOS, the fintech application. These components enable management of Indian compliance domains: TDS, GST, P-Tax, and GAAP.
+A comprehensive suite of production-grade filing workflow and compliance calendar UI components for Raven, the fintech application. These components enable management of Indian compliance domains: TDS, GST, P-Tax, and GAAP.
 
 **Total Implementation:** 2,131 lines of TypeScript/React code across 6 files
 
@@ -177,7 +177,7 @@ Each example includes:
 ## Design & Architecture
 
 ### Theme Integration
-- **Dark mode**: Uses existing FinOS dark theme
+- **Dark mode**: Uses existing Raven dark theme
 - **Colors**: primary (blue), tertiary (teal), error (red), text colors
 - **Typography**: headline font for display, proper weight hierarchy
 - **Responsive**: Mobile-first Tailwind design

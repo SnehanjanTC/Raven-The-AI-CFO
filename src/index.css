@@ -1,11 +1,11 @@
 /**
- * Warm Neutral Design System for AI-First Financial Platform
+ * Neon Green Design System for AI-First Financial Platform
  *
  * Architecture:
  * - Tailwind CSS v4 with @import and @theme for design tokens
  * - Custom utilities and animations for glassmorphism, glow effects
- * - Warm neutral dark theme inspired by Linear, Notion dark mode
- * - Handcrafted feel: no neon, no blue/purple, warm amber + stone palette
+ * - Premium fintech dark theme: Bloomberg terminal meets modern fintech
+ * - Sophisticated neon green accents on dark backgrounds
  *
  * Fonts: Loaded via fonts.bunny.net in index.html (GDPR-friendly)
  */
@@ -17,44 +17,46 @@
   --font-headline: "Manrope", ui-sans-serif, system-ui, sans-serif;
   --font-body: "Inter", ui-sans-serif, system-ui, sans-serif;
 
-  /* Core Background & Surface Palette — Warm blacks and dark stones */
-  --color-background: #111110;
-  --color-surface: #111110;
-  --color-surface-container-lowest: #0c0c0b;
-  --color-surface-container-low: #181816;
-  --color-surface-container: #1c1c1a;
-  --color-surface-container-high: #242422;
-  --color-surface-container-highest: #2e2e2b;
+  /* Core Background & Surface Palette — Cool blacks with neon contrast */
+  --color-background: #0A0A0F;
+  --color-surface: #0A0A0F;
+  --color-surface-container-lowest: #050508;
+  --color-surface-container-low: #0F0F14;
+  --color-surface-container: #141419;
+  --color-surface-container-high: #1A1A20;
+  --color-surface-container-highest: #222228;
 
-  /* Primary — Warm amber/gold accent */
-  --color-primary: #e5a764;
-  --color-on-primary: #3d2200;
-  --color-primary-container: #5c3a0a;
-  --color-on-primary-container: #f0c78e;
+  /* Primary — Neon green accent */
+  --color-primary: #00F0A0;
+  --color-on-primary: #001A0F;
+  --color-primary-container: #0A3D2A;
+  --color-on-primary-container: #4DFFC0;
+  /* Primary text variant - slightly darker for better text contrast (WCAG AA) */
+  --color-primary-text: #00CC88;
 
-  /* Secondary — Warm stone/taupe for supporting elements */
-  --color-secondary: #c4bdb4;
-  --color-on-secondary: #2e2a24;
-  --color-secondary-container: #45413a;
+  /* Secondary — Cool gray for supporting elements */
+  --color-secondary: #9CA3AF;
+  --color-on-secondary: #0A0A0F;
+  --color-secondary-container: #374151;
 
-  /* Tertiary — Muted sage green for success/positive states */
-  --color-tertiary: #5bb98c;
-  --color-on-tertiary: #0a2e1c;
+  /* Tertiary — Brighter neon green for success/positive states */
+  --color-tertiary: #00FF87;
+  --color-on-tertiary: #0A2E1C;
 
-  /* Error — Warm coral-red for critical/error states */
-  --color-error: #e8866a;
-  --color-error-container: #5c1a0a;
+  /* Error — Brighter red for contrast with green */
+  --color-error: #FF6B6B;
+  --color-error-container: #3D1515;
 
-  /* AI Accent — Uses primary amber (no separate purple) */
-  --color-ai: #e5a764;
-  --color-on-ai: #3d2200;
+  /* AI Accent — Neon green (same as primary) */
+  --color-ai: #00F0A0;
+  --color-on-ai: #001A0F;
 
-  /* Text & Outline — Warm off-whites and greys */
-  --color-outline: #7c7a75;
-  --color-outline-variant: #4a4944;
-  --color-on-background: #e8e4dd;
-  --color-on-surface: #e8e4dd;
-  --color-on-surface-variant: #b5b1a9;
+  /* Text & Outline — Cool whites and greys */
+  --color-outline: #4B5563;
+  --color-outline-variant: #374151;
+  --color-on-background: #E8ECF0;
+  --color-on-surface: #E8ECF0;
+  --color-on-surface-variant: #9CA3AF;
 }
 
 /* ============================================================================
@@ -71,8 +73,8 @@
   }
 
   ::selection {
-    background: rgba(229, 167, 100, 0.3);
-    color: rgb(232, 228, 221);
+    background: rgba(0, 240, 160, 0.3);
+    color: rgb(232, 236, 240);
   }
 }
 
@@ -113,33 +115,33 @@
    ============================================================================ */
 
 .glow-primary {
-  box-shadow: 0 0 16px rgba(229, 167, 100, 0.15),
-              0 0 32px rgba(229, 167, 100, 0.06);
+  box-shadow: 0 0 16px rgba(0, 240, 160, 0.15),
+              0 0 32px rgba(0, 240, 160, 0.06);
 }
 
 .glow-primary-lg {
-  box-shadow: 0 0 24px rgba(229, 167, 100, 0.22),
-              0 0 48px rgba(229, 167, 100, 0.1);
+  box-shadow: 0 0 24px rgba(0, 240, 160, 0.22),
+              0 0 48px rgba(0, 240, 160, 0.1);
 }
 
 .glow-success {
-  box-shadow: 0 0 16px rgba(91, 185, 140, 0.18),
-              0 0 32px rgba(91, 185, 140, 0.07);
+  box-shadow: 0 0 16px rgba(0, 255, 135, 0.18),
+              0 0 32px rgba(0, 255, 135, 0.07);
 }
 
 .glow-error {
-  box-shadow: 0 0 16px rgba(232, 134, 106, 0.18),
-              0 0 32px rgba(232, 134, 106, 0.07);
+  box-shadow: 0 0 16px rgba(255, 107, 107, 0.18),
+              0 0 32px rgba(255, 107, 107, 0.07);
 }
 
 .glow-ai {
-  box-shadow: 0 0 16px rgba(229, 167, 100, 0.18),
-              0 0 32px rgba(229, 167, 100, 0.07);
+  box-shadow: 0 0 16px rgba(0, 240, 160, 0.18),
+              0 0 32px rgba(0, 240, 160, 0.07);
 }
 
 .glow-ambient {
-  box-shadow: inset 0 0 24px rgba(229, 167, 100, 0.03),
-              0 0 20px rgba(229, 167, 100, 0.04);
+  box-shadow: inset 0 0 24px rgba(0, 240, 160, 0.03),
+              0 0 20px rgba(0, 240, 160, 0.04);
 }
 
 /* ============================================================================
@@ -192,6 +194,23 @@
   50%, 100% { opacity: 0; }
 }
 
+@keyframes float-slow {
+  0%, 100% { transform: translate(0, 0) rotate(0deg); }
+  33% { transform: translate(30px, -40px) rotate(120deg); }
+  66% { transform: translate(-20px, 30px) rotate(240deg); }
+}
+
+@keyframes float-slower {
+  0%, 100% { transform: translate(0, 0) rotate(0deg); }
+  33% { transform: translate(-40px, 30px) rotate(120deg); }
+  66% { transform: translate(30px, -30px) rotate(240deg); }
+}
+
+@keyframes glow-pulse {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.8; }
+}
+
 .animate-fade-in { animation: fade-in 0.4s ease-out; }
 .animate-fade-in-slow { animation: fade-in 0.6s ease-out; }
 .animate-slide-up { animation: slide-up 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); }
@@ -199,6 +218,9 @@
 .animate-scale-in { animation: scale-in 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
 .animate-pulse-glow { animation: pulse-glow 2s ease-in-out infinite; }
 .animate-float { animation: float 3s ease-in-out infinite; }
+.animate-float-slow { animation: float-slow 20s ease-in-out infinite; }
+.animate-float-slower { animation: float-slower 24s ease-in-out infinite; }
+.animate-glow-pulse { animation: glow-pulse 4s ease-in-out infinite; }
 .animate-shimmer { animation: shimmer 2s infinite; background-size: 1000px 100%; }
 .animate-gradient-rotate { animation: gradient-rotate 3s ease infinite; background-size: 200% 200%; }
 
@@ -217,7 +239,7 @@
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background-color: rgb(229, 167, 100);
+  background-color: rgb(0, 240, 160);
   animation: typing-blink 1.4s infinite;
 }
 
@@ -225,7 +247,7 @@
 .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
 
 .gradient-text {
-  background: linear-gradient(135deg, rgb(229, 167, 100), rgb(196, 189, 180), rgb(91, 185, 140));
+  background: linear-gradient(135deg, rgb(0, 240, 160), rgb(77, 255, 192), rgb(0, 255, 135));
   background-size: 200% 200%;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -233,7 +255,7 @@
 }
 
 .gradient-text-animated {
-  background: linear-gradient(135deg, rgb(229, 167, 100), rgb(196, 189, 180), rgb(91, 185, 140));
+  background: linear-gradient(135deg, rgb(0, 240, 160), rgb(77, 255, 192), rgb(0, 255, 135));
   background-size: 200% 200%;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -243,17 +265,17 @@
 
 .border-gradient-rotate {
   position: relative;
-  background: linear-gradient(rgba(17, 17, 16, 0.6), rgba(17, 17, 16, 0.6)) padding-box,
-              linear-gradient(135deg, rgb(229, 167, 100), rgb(196, 189, 180), rgb(91, 185, 140)) border-box;
+  background: linear-gradient(rgba(10, 10, 15, 0.6), rgba(10, 10, 15, 0.6)) padding-box,
+              linear-gradient(135deg, rgb(0, 240, 160), rgb(77, 255, 192), rgb(0, 255, 135)) border-box;
   border: 2px solid transparent;
   animation: gradient-rotate 3s ease infinite;
 }
 
 .ai-chip {
   @apply inline-flex items-center gap-2 px-3 py-1.5 rounded-full;
-  background: rgba(229, 167, 100, 0.12);
-  border: 1px solid rgba(229, 167, 100, 0.3);
-  color: rgb(229, 167, 100);
+  background: rgba(0, 240, 160, 0.12);
+  border: 1px solid rgba(0, 240, 160, 0.3);
+  color: rgb(0, 240, 160);
   font-size: 0.8125rem;
   font-weight: 500;
 }
@@ -270,20 +292,20 @@
 .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(196, 189, 180, 0.15);
+  background: rgba(156, 163, 175, 0.15);
   border-radius: 4px;
   transition: background 0.2s ease;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: rgba(196, 189, 180, 0.3);
+  background: rgba(156, 163, 175, 0.3);
 }
 
 .custom-scrollbar::-webkit-scrollbar-corner { background: transparent; }
 
 .custom-scrollbar {
   scrollbar-width: thin;
-  scrollbar-color: rgba(196, 189, 180, 0.15) transparent;
+  scrollbar-color: rgba(156, 163, 175, 0.15) transparent;
 }
 
 /* ============================================================================
@@ -341,26 +363,45 @@ button, a, input, select, textarea, [role="button"] {
    ============================================================================ */
 
 :focus-visible {
-  outline: 2px solid rgb(229, 167, 100);
+  outline: 2px solid rgb(0, 240, 160);
   outline-offset: 2px;
 }
 
 button:focus-visible {
-  box-shadow: 0 0 0 3px rgba(229, 167, 100, 0.3);
+  box-shadow: 0 0 0 3px rgba(0, 240, 160, 0.3);
+  outline-offset: 0px;
+}
+
+/* ============================================================================
+   REDUCED MOTION SUPPORT
+   ============================================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in, .animate-fade-in-slow, .animate-slide-up,
+  .animate-slide-in-right, .animate-scale-in, .animate-pulse-glow,
+  .animate-float, .animate-float-slow, .animate-float-slower, .animate-glow-pulse,
+  .animate-shimmer, .animate-gradient-rotate {
+    animation: none !important;
+  }
 }
 
 /* ============================================================================
    LINK STYLING
    ============================================================================ */
 
+/* Note: Using primary-text color (#00CC88) for links to maintain WCAG AA contrast
+   ratio when used over light backgrounds. The brighter #00F0A0 is reserved for
+   UI accents on dark backgrounds. */
 a {
-  color: rgb(229, 167, 100);
+  color: rgb(0, 204, 136);
   text-decoration: none;
   transition: color 0.2s ease-out;
 }
 
 a:hover {
-  color: rgb(240, 199, 142);
+  color: rgb(0, 240, 160);
+  text-decoration: underline;
+  text-underline-offset: 2px;
 }
 
 /* ============================================================================
@@ -399,13 +440,13 @@ a:hover {
 }
 
 .elevated-card {
-  background: rgba(46, 46, 43, 0.75);
+  background: rgba(20, 20, 25, 0.75);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
   border: 1px solid rgba(255, 250, 240, 0.08);
   border-radius: 0.75rem;
   padding: 1rem;
-  box-shadow: inset 0 0 24px rgba(229, 167, 100, 0.03), 0 0 20px rgba(229, 167, 100, 0.04);
+  box-shadow: inset 0 0 24px rgba(0, 240, 160, 0.03), 0 0 20px rgba(0, 240, 160, 0.04);
 }
 
 @media (min-width: 768px) {
@@ -418,7 +459,7 @@ a:hover {
 }
 
 .interactive-primary:hover {
-  box-shadow: 0 0 16px rgba(229, 167, 100, 0.15), 0 0 32px rgba(229, 167, 100, 0.06);
+  box-shadow: 0 0 16px rgba(0, 240, 160, 0.15), 0 0 32px rgba(0, 240, 160, 0.06);
 }
 
 .interactive-success {
@@ -427,7 +468,7 @@ a:hover {
 }
 
 .interactive-success:hover {
-  box-shadow: 0 0 16px rgba(91, 185, 140, 0.18), 0 0 32px rgba(91, 185, 140, 0.07);
+  box-shadow: 0 0 16px rgba(0, 255, 135, 0.18), 0 0 32px rgba(0, 255, 135, 0.07);
 }
 
 .interactive-ai {
@@ -436,7 +477,7 @@ a:hover {
 }
 
 .interactive-ai:hover {
-  box-shadow: 0 0 16px rgba(229, 167, 100, 0.18), 0 0 32px rgba(229, 167, 100, 0.07);
+  box-shadow: 0 0 16px rgba(0, 240, 160, 0.18), 0 0 32px rgba(0, 240, 160, 0.07);
 }
 
 [disabled], .disabled {
@@ -445,4 +486,31 @@ a:hover {
 
 .backdrop-overlay {
   @apply fixed inset-0 bg-black/60 backdrop-blur-sm;
+}
+
+/* ============================================================================
+   SCREEN READER ONLY / SKIP LINKS
+   ============================================================================ */
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+.focus\:not-sr-only:focus {
+  position: static;
+  width: auto;
+  height: auto;
+  padding: inherit;
+  margin: inherit;
+  overflow: visible;
+  clip: auto;
+  white-space: normal;
 }

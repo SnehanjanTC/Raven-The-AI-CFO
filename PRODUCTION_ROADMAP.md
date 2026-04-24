@@ -1,4 +1,4 @@
-# FinOS Production Roadmap
+# Raven Production Roadmap
 
 **Product:** AI CFO for Solo Founders
 **Timeline:** 4-6 weeks (solo founder)
@@ -62,12 +62,12 @@ Backend files (cut):
 
 ### 1.2 Simplify AI provider to Claude only
 
-- [ ] Remove `VITE_GEMINI_API_KEY`, `VITE_OPENAI_API_KEY`, `VITE_GROK_API_KEY` from env
-- [ ] Remove Google Generative AI SDK dependency (`@google/generative-ai`)
-- [ ] Rename `VITE_ANTHROPIC_API_KEY` to `VITE_CLAUDE_API_KEY`
-- [ ] Rewrite `backend/app/api/ai_proxy.py` — strip multi-provider switching logic, single Claude endpoint
-- [ ] Update `AIChatSidebar.tsx` (394 lines) — remove provider selection UI, hardcode Claude
-- [ ] Update `CFOCopilot.tsx` (621 lines) — same cleanup, this becomes the foundation for the new chat view
+- [x] Remove `VITE_GEMINI_API_KEY`, `VITE_OPENAI_API_KEY`, `VITE_GROK_API_KEY` from env
+- [x] Remove Google Generative AI SDK dependency (`@google/generative-ai`)
+- [x] Updated `VITE_ANTHROPIC_API_KEY` standardization (using as-is, not renaming)
+- [x] Rewrite `backend/app/api/v1/endpoints/ai_proxy.py` — strip multi-provider switching logic, single Claude endpoint
+- [x] Update `CFOCopilot.tsx` (621 lines) — remove provider selection UI, hardcode Claude
+- [x] Update `src/lib/ai.ts` — Claude-only implementation with streaming
 
 ### 1.3 Scaffold the new chat-first layout
 

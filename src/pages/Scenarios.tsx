@@ -281,7 +281,7 @@ export function Scenarios() {
             <div className={cn(
               "inline-flex px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider",
               runwayMonths === '12+' ? "bg-emerald-500/20 text-emerald-300" :
-              parseInt(runwayMonths.toString()) > 6 ? "bg-[#e5a764]/20 text-[#f0c78e]" : "bg-red-500/20 text-red-300"
+              parseInt(runwayMonths.toString()) > 6 ? "bg-[#00F0A0]/20 text-[#4DFFC0]" : "bg-red-500/20 text-red-300"
             )}>
               {runwayMonths === '12+' ? 'Optimistic' : parseInt(runwayMonths.toString()) > 6 ? 'Stable' : 'Critical'}
             </div>
@@ -294,7 +294,7 @@ export function Scenarios() {
             <h3 className="text-xs uppercase tracking-wider text-slate-500 font-bold">12-Month Projection</h3>
             <div className="flex gap-4 text-[10px]">
               <div className="flex items-center gap-1.5">
-                <div className="w-2 h-2 rounded-full bg-[#e5a764]"></div>
+                <div className="w-2 h-2 rounded-full bg-[#00F0A0]"></div>
                 <span className="text-slate-400">Treasury Cash</span>
               </div>
             </div>
@@ -305,8 +305,8 @@ export function Scenarios() {
               <AreaChart data={projectionData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                 <defs>
                   <linearGradient id="colorCash" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#e5a764" stopOpacity={0.2}/>
-                    <stop offset="95%" stopColor="#e5a764" stopOpacity={0}/>
+                    <stop offset="5%" stopColor="#00F0A0" stopOpacity={0.2}/>
+                    <stop offset="95%" stopColor="#00F0A0" stopOpacity={0}/>
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#ffffff08" vertical={false} />
@@ -331,7 +331,7 @@ export function Scenarios() {
                 <Area
                   type="monotone"
                   dataKey="cash"
-                  stroke="#e5a764"
+                  stroke="#00F0A0"
                   strokeWidth={3}
                   fillOpacity={1}
                   fill="url(#colorCash)"
@@ -351,7 +351,7 @@ export function Scenarios() {
             </div>
             <div>
               <p className="text-xs uppercase tracking-wider text-slate-500 font-bold mb-1">Efficiency</p>
-              <p className="text-sm font-bold text-[#e5a764]">
+              <p className="text-sm font-bold text-[#00F0A0]">
                 {((growth / churn) || 0).toFixed(1)}x
               </p>
             </div>
@@ -381,12 +381,12 @@ export function Scenarios() {
                 value={savingScenarioName}
                 onChange={(e) => setSavingScenarioName(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && handleSaveScenario()}
-                className="px-4 py-2.5 bg-white/[0.04] border border-white/[0.06] rounded-xl text-white text-sm placeholder:text-slate-500 focus:outline-none focus:border-[#e5a764]/50"
+                className="px-4 py-2.5 bg-white/[0.04] border border-white/[0.06] rounded-xl text-white text-sm placeholder:text-slate-500 focus:outline-none focus:border-[#00F0A0]/50"
                 autoFocus
               />
               <button
                 onClick={handleSaveScenario}
-                className="px-6 py-2.5 bg-gradient-to-r from-[#e5a764] to-[#d99850] text-white rounded-xl text-xs font-bold hover:opacity-90 transition-all"
+                className="px-6 py-2.5 bg-gradient-to-r from-[#00F0A0] to-[#00CC88] text-[#001A0F] rounded-xl text-xs font-bold hover:opacity-90 transition-all"
               >
                 Save
               </button>
@@ -400,7 +400,7 @@ export function Scenarios() {
           ) : (
             <button
               onClick={() => setShowSaveInput(true)}
-              className="flex items-center gap-2 bg-gradient-to-r from-[#e5a764] to-[#d99850] text-white px-6 py-2.5 rounded-xl text-xs font-bold hover:opacity-90 transition-all"
+              className="flex items-center gap-2 bg-gradient-to-r from-[#00F0A0] to-[#00CC88] text-[#001A0F] px-6 py-2.5 rounded-xl text-xs font-bold hover:opacity-90 transition-all"
             >
               <Save className="w-4 h-4" /> Save Scenario
             </button>
@@ -417,11 +417,11 @@ export function Scenarios() {
               <button
                 key={s.id}
                 onClick={() => setSelectedScenario(s)}
-                className="glass-subtle rounded-xl p-5 text-left border border-white/[0.06] hover:border-[#e5a764]/30 transition-all group"
+                className="glass-subtle rounded-xl p-5 text-left border border-white/[0.06] hover:border-[#00F0A0]/30 transition-all group"
               >
                 <div className="flex items-start justify-between mb-3">
-                  <div className="w-8 h-8 rounded-lg bg-white/[0.08] flex items-center justify-center group-hover:bg-[#e5a764]/20 transition-all">
-                    <LineChartIcon className="w-4 h-4 text-[#e5a764]" />
+                  <div className="w-8 h-8 rounded-lg bg-white/[0.08] flex items-center justify-center group-hover:bg-[#00F0A0]/20 transition-all">
+                    <LineChartIcon className="w-4 h-4 text-[#00F0A0]" />
                   </div>
                   <span className={cn(
                     "px-2 py-0.5 rounded text-[7px] font-bold uppercase tracking-widest",
@@ -433,7 +433,7 @@ export function Scenarios() {
                 <h3 className="font-bold text-white text-sm mb-2">{s.title}</h3>
                 <p className="text-[10px] text-slate-400 leading-relaxed mb-4 line-clamp-2">{s.description}</p>
                 <div className="pt-3 border-t border-white/[0.06] flex justify-between items-center text-[9px] font-bold uppercase tracking-widest">
-                  <span className="text-[#e5a764]">{s.impact}</span>
+                  <span className="text-[#00F0A0]">{s.impact}</span>
                   <span className="text-slate-500">{new Date(s.last_updated).toLocaleDateString()}</span>
                 </div>
               </button>
@@ -456,7 +456,7 @@ export function Scenarios() {
               <p className="text-sm text-slate-300 leading-relaxed">{selectedScenario.description}</p>
             </div>
             <div className="grid grid-cols-3 gap-4">
-              <DetailStat label="Impact" value={selectedScenario.impact} color="text-[#e5a764]" />
+              <DetailStat label="Impact" value={selectedScenario.impact} color="text-[#00F0A0]" />
               <DetailStat label="Status" value={selectedScenario.status.charAt(0).toUpperCase() + selectedScenario.status.slice(1)} color={selectedScenario.status === 'active' ? 'text-emerald-400' : 'text-slate-400'} />
               <DetailStat label="Probability" value={selectedScenario.probability || 'Medium'} />
             </div>
@@ -472,7 +472,7 @@ export function Scenarios() {
                   }
                   setSelectedScenario(null);
                 }}
-                className="flex-1 py-2.5 bg-gradient-to-r from-[#e5a764] to-[#d99850] text-white rounded-xl text-xs font-bold hover:opacity-90 transition-all"
+                className="flex-1 py-2.5 bg-gradient-to-r from-[#00F0A0] to-[#00CC88] text-[#001A0F] rounded-xl text-xs font-bold hover:opacity-90 transition-all"
               >
                 Load Scenario
               </button>

@@ -1,0 +1,21 @@
+[build]
+builder = "dockerfile"
+dockerfile = "./Dockerfile"
+buildCommand = "docker build -t raven-backend ."
+
+[deploy]
+startCommand = "uvicorn app.main:app --host 0.0.0.0 --port $PORT"
+restartPolicyMaxRetries = 3
+healthchecks = { enabled = true }
+
+[env]
+PYTHONUNBUFFERED = "1"
+ENVIRONMENT = "production"
+
+[[services]]
+name = "backend"
+protocol = "http"
+port = 8000
+healthCheck = "/api/v1/health"
+healthCheckInterval = 30
+healthCheckTimeout = 3
