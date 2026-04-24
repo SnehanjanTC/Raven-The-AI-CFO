@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 280" fill="none">
+  <defs>
+    <linearGradient id="tealGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2BA8A0"/>
+      <stop offset="100%" stop-color="#3CD9CC"/>
+    </linearGradient>
+    <linearGradient id="arrowGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="white"/>
+      <stop offset="100%" stop-color="#3CD9CC"/>
+    </linearGradient>
+    <linearGradient id="oGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2BA8A0"/>
+      <stop offset="100%" stop-color="#3CD9CC"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Bracket: left vertical + top horizontal (white) -->
+  <path d="M 140 38 H 102 C 87 38 78 49 78 62 V 135"
+        stroke="white" stroke-width="13" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+
+  <!-- Bracket: bottom horizontal + right upturn (teal) -->
+  <path d="M 78 135 H 192 C 206 135 214 125 214 112 V 95"
+        stroke="url(#tealGrad)" stroke-width="13" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+
+  <!-- Arrow zigzag line -->
+  <path d="M 105 125 L 148 76 L 178 94 L 218 40"
+        stroke="url(#arrowGrad)" stroke-width="11" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+
+  <!-- Arrow head -->
+  <polygon points="220,36 202,40 218,56" fill="#3CD9CC"/>
+
+  <!-- "Fin" text -->
+  <text x="63" y="205" font-family="'Inter','Segoe UI','Helvetica Neue',system-ui,sans-serif" font-size="60" font-weight="700" letter-spacing="-1" fill="white">Fin</text>
+
+  <!-- "OS" text with teal gradient -->
+  <text x="160" y="205" font-family="'Inter','Segoe UI','Helvetica Neue',system-ui,sans-serif" font-size="60" font-weight="700" letter-spacing="-1" fill="url(#oGrad)">OS</text>
+
+  <!-- Subtitle -->
+  <text x="150" y="235" font-family="'Inter','Segoe UI','Helvetica Neue',system-ui,sans-serif" font-size="12.5" font-weight="500" letter-spacing="2.5" fill="rgba(255,255,255,0.45)" text-anchor="middle">AI FINANCE OS FOR STARTUPS</text>
+</svg>

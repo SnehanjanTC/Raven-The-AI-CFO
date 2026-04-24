@@ -1,0 +1,12 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "finos-dev",
+      "runtimeExecutable": "/bin/sh",
+      "runtimeArgs": ["-c", "export PATH=/opt/homebrew/bin:$PATH && npx vite --port $PORT --host 0.0.0.0"],
+      "port": 3002,
+      "autoPort": true
+    }
+  ]
+}

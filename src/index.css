@@ -1,0 +1,448 @@
+/**
+ * Warm Neutral Design System for AI-First Financial Platform
+ *
+ * Architecture:
+ * - Tailwind CSS v4 with @import and @theme for design tokens
+ * - Custom utilities and animations for glassmorphism, glow effects
+ * - Warm neutral dark theme inspired by Linear, Notion dark mode
+ * - Handcrafted feel: no neon, no blue/purple, warm amber + stone palette
+ *
+ * Fonts: Loaded via fonts.bunny.net in index.html (GDPR-friendly)
+ */
+
+@import "tailwindcss";
+
+@theme {
+  /* Typography */
+  --font-headline: "Manrope", ui-sans-serif, system-ui, sans-serif;
+  --font-body: "Inter", ui-sans-serif, system-ui, sans-serif;
+
+  /* Core Background & Surface Palette — Warm blacks and dark stones */
+  --color-background: #111110;
+  --color-surface: #111110;
+  --color-surface-container-lowest: #0c0c0b;
+  --color-surface-container-low: #181816;
+  --color-surface-container: #1c1c1a;
+  --color-surface-container-high: #242422;
+  --color-surface-container-highest: #2e2e2b;
+
+  /* Primary — Warm amber/gold accent */
+  --color-primary: #e5a764;
+  --color-on-primary: #3d2200;
+  --color-primary-container: #5c3a0a;
+  --color-on-primary-container: #f0c78e;
+
+  /* Secondary — Warm stone/taupe for supporting elements */
+  --color-secondary: #c4bdb4;
+  --color-on-secondary: #2e2a24;
+  --color-secondary-container: #45413a;
+
+  /* Tertiary — Muted sage green for success/positive states */
+  --color-tertiary: #5bb98c;
+  --color-on-tertiary: #0a2e1c;
+
+  /* Error — Warm coral-red for critical/error states */
+  --color-error: #e8866a;
+  --color-error-container: #5c1a0a;
+
+  /* AI Accent — Uses primary amber (no separate purple) */
+  --color-ai: #e5a764;
+  --color-on-ai: #3d2200;
+
+  /* Text & Outline — Warm off-whites and greys */
+  --color-outline: #7c7a75;
+  --color-outline-variant: #4a4944;
+  --color-on-background: #e8e4dd;
+  --color-on-surface: #e8e4dd;
+  --color-on-surface-variant: #b5b1a9;
+}
+
+/* ============================================================================
+   BASE LAYER
+   ============================================================================ */
+
+@layer base {
+  body {
+    @apply bg-background text-on-background font-body antialiased transition-colors duration-300;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  ::selection {
+    background: rgba(229, 167, 100, 0.3);
+    color: rgb(232, 228, 221);
+  }
+}
+
+/* ============================================================================
+   GLASSMORPHISM UTILITIES — Warm-tinted glass effects
+   ============================================================================ */
+
+.glass-subtle {
+  background: rgba(28, 28, 26, 0.45);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border: 1px solid rgba(255, 250, 240, 0.04);
+}
+
+.glass-panel {
+  background: rgba(36, 36, 34, 0.6);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 250, 240, 0.06);
+}
+
+.glass-card {
+  background: rgba(46, 46, 43, 0.75);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 250, 240, 0.08);
+}
+
+.glass-modal {
+  background: rgba(17, 17, 16, 0.88);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 250, 240, 0.1);
+}
+
+/* ============================================================================
+   GLOW EFFECTS — Warm amber and earth-tone glows
+   ============================================================================ */
+
+.glow-primary {
+  box-shadow: 0 0 16px rgba(229, 167, 100, 0.15),
+              0 0 32px rgba(229, 167, 100, 0.06);
+}
+
+.glow-primary-lg {
+  box-shadow: 0 0 24px rgba(229, 167, 100, 0.22),
+              0 0 48px rgba(229, 167, 100, 0.1);
+}
+
+.glow-success {
+  box-shadow: 0 0 16px rgba(91, 185, 140, 0.18),
+              0 0 32px rgba(91, 185, 140, 0.07);
+}
+
+.glow-error {
+  box-shadow: 0 0 16px rgba(232, 134, 106, 0.18),
+              0 0 32px rgba(232, 134, 106, 0.07);
+}
+
+.glow-ai {
+  box-shadow: 0 0 16px rgba(229, 167, 100, 0.18),
+              0 0 32px rgba(229, 167, 100, 0.07);
+}
+
+.glow-ambient {
+  box-shadow: inset 0 0 24px rgba(229, 167, 100, 0.03),
+              0 0 20px rgba(229, 167, 100, 0.04);
+}
+
+/* ============================================================================
+   CUSTOM ANIMATIONS
+   ============================================================================ */
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slide-in-right {
+  from { opacity: 0; transform: translateX(-12px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes scale-in {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-8px); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -1000px 0; }
+  100% { background-position: 1000px 0; }
+}
+
+@keyframes gradient-rotate {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes typing-blink {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+
+.animate-fade-in { animation: fade-in 0.4s ease-out; }
+.animate-fade-in-slow { animation: fade-in 0.6s ease-out; }
+.animate-slide-up { animation: slide-up 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); }
+.animate-slide-in-right { animation: slide-in-right 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); }
+.animate-scale-in { animation: scale-in 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
+.animate-pulse-glow { animation: pulse-glow 2s ease-in-out infinite; }
+.animate-float { animation: float 3s ease-in-out infinite; }
+.animate-shimmer { animation: shimmer 2s infinite; background-size: 1000px 100%; }
+.animate-gradient-rotate { animation: gradient-rotate 3s ease infinite; background-size: 200% 200%; }
+
+/* ============================================================================
+   AI-SPECIFIC STYLES — Warm amber typing indicator, gradient text
+   ============================================================================ */
+
+.typing-indicator {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.typing-indicator span {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: rgb(229, 167, 100);
+  animation: typing-blink 1.4s infinite;
+}
+
+.typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+.typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+
+.gradient-text {
+  background: linear-gradient(135deg, rgb(229, 167, 100), rgb(196, 189, 180), rgb(91, 185, 140));
+  background-size: 200% 200%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.gradient-text-animated {
+  background: linear-gradient(135deg, rgb(229, 167, 100), rgb(196, 189, 180), rgb(91, 185, 140));
+  background-size: 200% 200%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: gradient-rotate 4s ease infinite;
+}
+
+.border-gradient-rotate {
+  position: relative;
+  background: linear-gradient(rgba(17, 17, 16, 0.6), rgba(17, 17, 16, 0.6)) padding-box,
+              linear-gradient(135deg, rgb(229, 167, 100), rgb(196, 189, 180), rgb(91, 185, 140)) border-box;
+  border: 2px solid transparent;
+  animation: gradient-rotate 3s ease infinite;
+}
+
+.ai-chip {
+  @apply inline-flex items-center gap-2 px-3 py-1.5 rounded-full;
+  background: rgba(229, 167, 100, 0.12);
+  border: 1px solid rgba(229, 167, 100, 0.3);
+  color: rgb(229, 167, 100);
+  font-size: 0.8125rem;
+  font-weight: 500;
+}
+
+/* ============================================================================
+   SCROLLBAR STYLING — Warm-tinted scrollbars
+   ============================================================================ */
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(196, 189, 180, 0.15);
+  border-radius: 4px;
+  transition: background 0.2s ease;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(196, 189, 180, 0.3);
+}
+
+.custom-scrollbar::-webkit-scrollbar-corner { background: transparent; }
+
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(196, 189, 180, 0.15) transparent;
+}
+
+/* ============================================================================
+   SCROLLBAR HIDING UTILITY
+   ============================================================================ */
+
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* ============================================================================
+   SKELETON LOADING
+   ============================================================================ */
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--color-surface-container) 0%,
+    var(--color-surface-container-high) 20%,
+    var(--color-surface-container) 40%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-pulse 2s ease-in-out infinite;
+}
+
+@keyframes skeleton-pulse {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ============================================================================
+   BACKDROP NOISE/TEXTURE
+   ============================================================================ */
+
+.backdrop-noise { position: relative; }
+
+.backdrop-noise::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' seed='1' /%3E%3C/filter%3E%3Crect width='400' height='400' filter='url(%23noiseFilter)' opacity='0.02'/%3E%3C/svg%3E");
+  pointer-events: none;
+  opacity: 0.5;
+}
+
+/* ============================================================================
+   SMOOTH TRANSITIONS
+   ============================================================================ */
+
+button, a, input, select, textarea, [role="button"] {
+  transition: all 0.2s ease-out;
+}
+
+/* ============================================================================
+   FOCUS STATES — Warm amber focus rings
+   ============================================================================ */
+
+:focus-visible {
+  outline: 2px solid rgb(229, 167, 100);
+  outline-offset: 2px;
+}
+
+button:focus-visible {
+  box-shadow: 0 0 0 3px rgba(229, 167, 100, 0.3);
+}
+
+/* ============================================================================
+   LINK STYLING
+   ============================================================================ */
+
+a {
+  color: rgb(229, 167, 100);
+  text-decoration: none;
+  transition: color 0.2s ease-out;
+}
+
+a:hover {
+  color: rgb(240, 199, 142);
+}
+
+/* ============================================================================
+   UTILITY CLASSES
+   ============================================================================ */
+
+.text-shadow-glass {
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+}
+
+.backdrop-blur-transition {
+  transition: backdrop-filter 0.3s ease-out;
+}
+
+.button-reset {
+  font: inherit;
+  color: inherit;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  padding: 0;
+  margin: 0;
+}
+
+.glass-container {
+  background: rgba(36, 36, 34, 0.6);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 250, 240, 0.06);
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .glass-container { padding: 2rem; }
+}
+
+.elevated-card {
+  background: rgba(46, 46, 43, 0.75);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 250, 240, 0.08);
+  border-radius: 0.75rem;
+  padding: 1rem;
+  box-shadow: inset 0 0 24px rgba(229, 167, 100, 0.03), 0 0 20px rgba(229, 167, 100, 0.04);
+}
+
+@media (min-width: 768px) {
+  .elevated-card { padding: 1.5rem; }
+}
+
+.interactive-primary {
+  cursor: pointer;
+  transition: all 200ms;
+}
+
+.interactive-primary:hover {
+  box-shadow: 0 0 16px rgba(229, 167, 100, 0.15), 0 0 32px rgba(229, 167, 100, 0.06);
+}
+
+.interactive-success {
+  cursor: pointer;
+  transition: all 200ms;
+}
+
+.interactive-success:hover {
+  box-shadow: 0 0 16px rgba(91, 185, 140, 0.18), 0 0 32px rgba(91, 185, 140, 0.07);
+}
+
+.interactive-ai {
+  cursor: pointer;
+  transition: all 200ms;
+}
+
+.interactive-ai:hover {
+  box-shadow: 0 0 16px rgba(229, 167, 100, 0.18), 0 0 32px rgba(229, 167, 100, 0.07);
+}
+
+[disabled], .disabled {
+  @apply opacity-50 cursor-not-allowed;
+}
+
+.backdrop-overlay {
+  @apply fixed inset-0 bg-black/60 backdrop-blur-sm;
+}
