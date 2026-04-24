@@ -220,8 +220,8 @@ export function useReports() {
           return;
         }
       }
-    } catch (err) {
-      console.warn('Zoho MCP reports unavailable, trying backend:', err);
+    } catch {
+      // Zoho MCP not connected — fall through to backend / demo.
     }
 
     // Strategy 1: Try REST API backend

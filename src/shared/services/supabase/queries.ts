@@ -20,7 +20,7 @@ export async function fetchMetrics(timeframe: string = '30d') {
   }
 
   const { data, error } = await query;
-  if (error) { console.error('Error fetching metrics:', error); return null; }
+  if (error) { console.debug(`[supabase] metrics unavailable`, error?.message); return null; }
   return data;
 }
 
@@ -41,7 +41,7 @@ export async function fetchAgents() {
     .select('*')
     .order('created_at', { ascending: false });
 
-  if (error) { console.error('Error fetching agents:', error); return null; }
+  if (error) { console.debug(`[supabase] agents unavailable`, error?.message); return null; }
   return data;
 }
 
@@ -95,7 +95,7 @@ export async function fetchReports() {
     .select('*')
     .order('date', { ascending: false });
 
-  if (error) { console.error('Error fetching reports:', error); return null; }
+  if (error) { console.debug(`[supabase] reports unavailable`, error?.message); return null; }
   return data;
 }
 
@@ -137,7 +137,7 @@ export async function createScenario(scenario: Record<string, any>) {
   if (!supabase) return null;
 
   const { error } = await supabase.from('scenarios').insert([scenario]);
-  if (error) console.error('Error saving scenario:', error);
+  if (error) console.debug('[supabase] saveScenario failed', error?.message);
   return !error;
 }
 
@@ -152,7 +152,7 @@ export async function fetchActivityLog(limit = 8) {
     .order('timestamp', { ascending: false })
     .limit(limit);
 
-  if (error) { console.error('Error fetching activity:', error); return null; }
+  if (error) { console.debug(`[supabase] activity unavailable`, error?.message); return null; }
   return data;
 }
 
@@ -177,6 +177,6 @@ export async function fetchMemoryStats() {
     .from('activity_log')
     .select('*', { count: 'exact', head: true });
 
-  if (error) { console.error('Error fetching memory stats:', error); return null; }
+  if (error) { console.debug('[supabase] memory stats unavailable', error?.message); return null; }
   return count;
 }

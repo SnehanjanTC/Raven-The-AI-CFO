@@ -4,12 +4,12 @@
 
 **The Open-Source AI CFO for Founders**
 
-An executive-grade financial dashboard with autonomous AI agents, real-time analytics, scenario modeling, and Claude-powered AI copilot.
+A Claude-powered financial dashboard with an AI copilot, custom KPI builder, Zoho Books integration, scenario modelling, and audit ledger.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.8-blue.svg)](https://www.typescriptlang.org/)
 [![React](https://img.shields.io/badge/React-19-61DAFB.svg)](https://react.dev/)
-[![Supabase](https://img.shields.io/badge/Supabase-Powered-3ECF8E.svg)](https://supabase.com/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-Backend-009688.svg)](https://fastapi.tiangolo.com/)
 
 </div>
 
@@ -17,16 +17,15 @@ An executive-grade financial dashboard with autonomous AI agents, real-time anal
 
 ## Features
 
-- **Executive Dashboard** — Real-time financial metrics, MRR tracking, burn rate, and runway projections with interactive charts.
-- **AI Copilot** — Conversational financial advisor with streaming responses. Powered by Anthropic Claude.
-- **Autonomous Agents** — Deploy AI agents for CFO analytics, FP&A, cash flow monitoring, accounts receivable/payable, and tax compliance.
-- **Scenario Sandbox** — "What-if" financial simulations with adjustable parameters (growth rate, churn, burn, initial cash) and 12-month projections.
-- **Audit Ledger** — Full transaction ledger with real-time sync, search, filtering, and manual entry support.
-- **Report Library** — Generate, version, and export financial reports (Excel, Board Deck, Investor Update formats).
-- **SIF Memory Bank** — Strategic Intelligence Framework with knowledge nodes and contextual data sourcing.
-- **Integrations Hub** — Connect financial tools (QuickBooks, Stripe, Ramp, Gusto) via OAuth 2.0 flows.
-- **Real-time Sync** — Powered by Supabase Realtime for live updates across all modules.
-- **Dark Mode UI** — Premium dark theme built with Tailwind CSS v4.
+- **AI Copilot (`/chat`)** — Conversational CFO powered by Anthropic Claude. Streams answers, remembers conversation history, and can ingest CSVs.
+- **Dashboard (`/dashboard`)** — MRR, burn rate, cash runway, ARR forecast, expense breakdown, and anomaly cards.
+- **Custom KPI Builder (`/kpis`)** — Define your own metrics with live-evaluated formulas (e.g. `burn / mrr`, `(revenue - expenses) / revenue * 100`). Ships with starter templates (Gross Margin, Rule of 40, Burn Multiple).
+- **Scenario Sandbox (`/scenarios`)** — What-if simulations on growth, churn, burn, and starting cash with 12-month projections.
+- **Audit Ledger (`/ledger`)** — Transaction ledger with search, filtering, and manual entry.
+- **Reports (`/reports`)** — Generate and export (Excel, PDF, PPTX) P&L, cash flow, and custom reports.
+- **Integrations (`/integrations`)** — Connect Zoho Books via MCP (OAuth). Pulls live MRR/ARR, invoices, and GST data.
+- **Settings (`/settings`)** — Profile, Claude API key management, demo-data toggle.
+- **Guest Mode** — Explore the full UI without any backend or accounts.
 
 ## Tech Stack
 
@@ -34,126 +33,115 @@ An executive-grade financial dashboard with autonomous AI agents, real-time anal
 |-------|-----------|
 | Frontend | React 19, TypeScript 5.8, Vite 6 |
 | Styling | Tailwind CSS v4, Framer Motion |
-| Database | Supabase (PostgreSQL + Realtime) |
-| AI | Anthropic Claude |
 | Charts | Recharts |
-| Routing | React Router v7 |
-| Markdown | react-markdown + remark-gfm |
+| AI | Anthropic Claude (via backend proxy or direct) |
+| Backend | FastAPI, SQLAlchemy, SQLite (dev) / Supabase Postgres (prod) |
+| Auth & Realtime | Supabase (optional) |
 
-## Quick Start
-
-### Prerequisites
-
-- **Node.js** 18+ and npm
-- A **Supabase** account (free tier works) — [supabase.com](https://supabase.com)
-- An **Anthropic Claude API key** (get from [console.anthropic.com](https://console.anthropic.com/))
-
-### 1. Clone and Install
+## Quick Start (Frontend Only — Guest Mode)
 
 ```bash
 git clone https://github.com/SnehanjanTC/Raven-The-AI-CFO.git
 cd Raven-The-AI-CFO
 npm install
+cp .env.example .env   # placeholders work for guest mode
+npm run dev
 ```
 
-### 2. Configure Environment
+Open [http://localhost:3000](http://localhost:3000) and click **Continue as Guest**. All pages render with demo data; no backend or Supabase needed.
+
+## Full Setup (with Backend)
+
+### 1. Frontend env
 
 ```bash
 cp .env.example .env
 ```
 
-Edit `.env` with your credentials:
+Fill in `.env`:
 
 ```env
+VITE_ANTHROPIC_API_KEY="sk-ant-..."
+VITE_API_URL="http://localhost:8000"
+# Optional — enables login/persistence:
 VITE_SUPABASE_URL="https://your-project.supabase.co"
 VITE_SUPABASE_ANON_KEY="your-anon-key"
-VITE_ANTHROPIC_API_KEY="your-claude-api-key"
 ```
 
-### 3. Set Up the Database
-
-1. Go to your Supabase project's **SQL Editor**.
-2. Paste and run the contents of `supabase_schema.sql`.
-3. This creates all required tables, indexes, RLS policies, and seed data.
-
-### 4. Run
+### 2. Backend
 
 ```bash
-npm run dev
+cd backend
+python -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env   # edit with your Anthropic / Supabase creds
+uvicorn app.main:app --reload --port 8000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) in your browser.
+The backend ships with SQLite for local development (`sqlite+aiosqlite:///./raven.db`), so no database server is required.
 
-### Running Without Supabase
+### 3. (Optional) Supabase schema
 
-Raven gracefully degrades without a Supabase connection. Most pages will show fallback/demo data, and the app remains navigable using **Guest Mode** on the login screen. The AI Copilot requires a Claude API key.
+If you want persistent auth and chat history:
 
-## Project Structure
+1. Create a project at [supabase.com](https://supabase.com).
+2. In the SQL Editor, paste & run `supabase_schema.sql`.
+3. Add `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` to `.env`.
 
-```
-raven/
-├── public/                 # Static assets
-├── src/
-│   ├── components/         # Reusable UI components
-│   │   ├── AgentDetail.tsx
-│   │   ├── CreateAgentForm.tsx
-│   │   ├── MetricCard.tsx
-│   │   ├── NotificationProvider.tsx
-│   │   ├── Sidebar.tsx
-│   │   └── TopNav.tsx
-│   ├── hooks/
-│   │   └── useMetrics.ts   # Supabase metrics fetcher
-│   ├── lib/
-│   │   ├── ai.ts           # Multi-provider AI streaming
-│   │   ├── supabase.ts     # Supabase client singleton
-│   │   └── utils.ts        # Tailwind class merging
-│   ├── pages/
-│   │   ├── Home.tsx         # Executive overview
-│   │   ├── Dashboard.tsx    # Financial analytics
-│   │   ├── Copilot.tsx      # AI chat assistant
-│   │   ├── Agents.tsx       # Autonomous agent management
-│   │   ├── Scenarios.tsx    # What-if simulations
-│   │   ├── Reports.tsx      # Report generation
-│   │   ├── Ledger.tsx       # Transaction ledger
-│   │   ├── Memory.tsx       # SIF knowledge bank
-│   │   ├── Integrations.tsx # Third-party connections
-│   │   ├── Settings.tsx     # AI provider & system config
-│   │   └── Login.tsx        # Authentication
-│   ├── types.ts             # Shared TypeScript types
-│   ├── index.css            # Global styles & theme
-│   ├── App.tsx              # Root component & routing
-│   └── main.tsx             # Entry point
-├── supabase_schema.sql      # Database schema + seed data
-├── .env.example             # Environment variable template
-├── vite.config.ts           # Vite configuration
-├── tsconfig.json            # TypeScript configuration
-└── package.json
-```
+### 4. (Optional) Zoho Books MCP
+
+1. Go to `/integrations` in the UI.
+2. Enter your Zoho MCP endpoint URL.
+3. Click **Connect** → complete OAuth → live revenue data appears in the dashboard, KPIs, and reports.
 
 ## Scripts
 
 | Command | Description |
 |---------|-------------|
-| `npm run dev` | Start development server on port 3000 |
+| `npm run dev` | Start the Vite dev server on port 3000 |
 | `npm run build` | Build for production |
-| `npm run preview` | Preview production build |
+| `npm run preview` | Preview the production build |
 | `npm run lint` | Type-check with TypeScript |
-| `npm run clean` | Remove build artifacts |
+| `npm test` | Run Vitest suite |
+
+## Project Layout
+
+```
+Raven-The-AI-CFO/
+├── src/                    # React frontend
+│   ├── pages/              # Route pages (Chat, Dashboard, Kpis, Reports, ...)
+│   ├── components/         # Reusable UI
+│   ├── layouts/            # ChatLayout — shared shell
+│   ├── hooks/              # useConversations, useSession, useReports, ...
+│   ├── lib/                # api client, demo data, utils
+│   └── shared/             # contexts, errors, services
+├── backend/                # FastAPI service
+│   ├── app/
+│   │   ├── api/v1/endpoints/  # REST + MCP endpoints
+│   │   ├── services/          # metrics, tools, context-builder
+│   │   └── main.py
+│   └── requirements.txt
+├── supabase_schema.sql     # Optional Postgres schema + RLS policies
+├── DEPLOYMENT.md           # Production deploy guide (Vercel + Railway/Render)
+└── CONTRIBUTING.md
+```
 
 ## AI Configuration
 
-Raven uses **Anthropic Claude** for all AI features. Configure your Claude API key in `.env`:
+Raven uses **Anthropic Claude**. Supply a key one of three ways (in order of precedence):
 
-```env
-VITE_ANTHROPIC_API_KEY="your-claude-api-key"
-```
+1. Backend env var `ANTHROPIC_API_KEY` — recommended for production (key never touches the browser).
+2. Frontend env var `VITE_ANTHROPIC_API_KEY` — for local dev.
+3. Settings page — stored in `localStorage`, browser-only.
 
-API keys can be set via environment variables or through the Settings page (stored in localStorage).
+## Deployment
+
+See [DEPLOYMENT.md](DEPLOYMENT.md) for Vercel (frontend) + Railway/Render (backend) recipes.
 
 ## Contributing
 
-We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+See [CONTRIBUTING.md](CONTRIBUTING.md). Issues and PRs welcome.
 
 ## License
 
-This project is licensed under the [MIT License](LICENSE).
+MIT — see [LICENSE](LICENSE).

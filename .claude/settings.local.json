@@ -120,7 +120,10 @@
       "Bash(git add *)",
       "Bash(git commit -m ' *)",
       "Bash(gh repo *)",
-      "Bash(git push *)"
+      "Bash(git push *)",
+      "Bash(grep -iE '\\\\.env\\\\.|\\\\.env$|token.json|credentials|\\\\.pem$|\\\\.p12$|\\\\.key$')",
+      "Bash(git rm *)",
+      "Bash(grep -E '__pycache__|\\\\.pyc$')"
     ]
   }
 }

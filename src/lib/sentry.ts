@@ -29,7 +29,7 @@ export function initSentry(): void {
 
       // Integrations
       integrations: [
-        new Sentry.Replay({
+        Sentry.replayIntegration({
           maskAllText: true,
           blockAllMedia: true,
         }),
@@ -49,7 +49,8 @@ export function initSentry(): void {
 
         // Ignore browser extension errors
         if (event.exception) {
-          const stack = hint.originalException?.stack || '';
+          const orig = hint.originalException;
+          const stack = orig instanceof Error ? (orig.stack || '') : '';
           if (stack.includes('chrome-extension://') || stack.includes('moz-extension://')) {
             return null;
           }

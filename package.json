@@ -1,7 +1,7 @@
 {
   "name": "raven",
   "version": "1.0.0",
-  "description": "Open-source AI-powered financial operating system for executive overview, autonomous agents, and strategic forecasting.",
+  "description": "Raven — the open-source AI CFO for founders. React + FastAPI dashboard with Claude-powered copilot, KPI builder, Zoho Books MCP integration, scenario modelling, and audit ledger.",
   "license": "MIT",
   "type": "module",
   "keywords": [

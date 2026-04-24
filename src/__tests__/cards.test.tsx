@@ -423,7 +423,7 @@ describe('TransactionListCard', () => {
             date: '2026-04-20',
             description: 'Customer Payment',
             amount: 5000,
-            type: 'credit',
+            type: 'income',
             category: 'Revenue',
           },
           {
@@ -431,7 +431,7 @@ describe('TransactionListCard', () => {
             date: '2026-04-18',
             description: 'AWS Bill',
             amount: 1200,
-            type: 'debit',
+            type: 'expense',
             category: 'Infrastructure',
           },
         ]}
@@ -449,7 +449,7 @@ describe('TransactionListCard', () => {
       date: '2026-04-20',
       description: `Transaction ${i}`,
       amount: 1000,
-      type: 'debit' as const,
+      type: 'expense' as const,
       category: 'Other',
     }));
 
@@ -476,7 +476,7 @@ describe('TransactionListCard', () => {
             date: '2026-04-20',
             description: 'Revenue',
             amount: 5000,
-            type: 'credit',
+            type: 'income',
             category: 'Revenue',
           },
         ]}
@@ -497,7 +497,7 @@ describe('TransactionListCard', () => {
             date: '2026-04-20',
             description: 'Expense',
             amount: 1200,
-            type: 'debit',
+            type: 'expense',
             category: 'Infrastructure',
           },
         ]}
@@ -517,7 +517,7 @@ describe('TransactionListCard', () => {
             date: '2026-04-20',
             description: 'Test',
             amount: 1000,
-            type: 'debit',
+            type: 'expense',
             category: 'Other',
           },
         ]}
@@ -537,7 +537,7 @@ describe('TransactionListCard', () => {
             date: '2026-04-20',
             description: 'Test',
             amount: 1000,
-            type: 'debit',
+            type: 'expense',
             category: 'SaaS',
           },
         ]}
@@ -565,7 +565,7 @@ describe('TransactionListCard', () => {
       date: '2026-04-20',
       description: `Transaction ${i}`,
       amount: 1000,
-      type: 'debit' as const,
+      type: 'expense' as const,
       category: 'Other',
     }));
 

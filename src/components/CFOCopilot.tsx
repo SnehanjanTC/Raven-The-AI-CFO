@@ -353,17 +353,10 @@ export function CFOCopilot({ isOpen, onClose, initialPrompt, currentPage = '/' }
         return;
       }
 
-      // Check if API key is configured before calling AI
+      // Claude calls are proxied through the backend. If the backend is
+      // unreachable, streamAIResponse will surface a clear error downstream.
       const aiConfig = getAIConfig();
-      if (!aiConfig.apiKey) {
-        setMessages(prev => [...prev, {
-          id: `nokey-${Date.now()}`,
-          role: 'assistant',
-          content: `I can run **instant calculations** (TDS, GST, Professional Tax, Depreciation) without an API key — just try something like:\n\n• "Calculate TDS on ₹5,00,000 under Section 194C"\n• "Calculate GST on ₹10L at 18%"\n• "Professional tax for ₹45,000 salary in Karnataka"\n• "Depreciation on ₹15L server"\n\nFor **general questions** and **strategic advice**, you'll need to add a Claude API key in **Settings → Strategic Intelligence Core**.`
-        }]);
-        setLoading(false);
-        return;
-      }
+      void aiConfig;
 
       // Stream AI response
       const systemPrompt = getCFOCopilotSystemPrompt(pageCtx.systemHint);

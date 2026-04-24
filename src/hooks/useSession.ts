@@ -54,7 +54,8 @@ export function useSession(): UseSessionReturn {
         setSessionData(data);
         setHasInitialized(true);
       } catch (err) {
-        console.error('Error initializing session:', err);
+        // Backend is optional — app degrades to demo/guest mode when offline.
+        // Keep this quiet in the console; expose via the returned `error` only.
         setError(err instanceof Error ? err : new Error('Unknown error'));
         // Still mark as initialized even on error to avoid infinite loops
         setHasInitialized(true);

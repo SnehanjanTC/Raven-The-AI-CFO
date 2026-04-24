@@ -74,7 +74,7 @@ export function AuthProvider({ children, onAuthChange }: { children: React.React
           setIsGuest(false);
         }
       } catch (error) {
-        console.error('Auth initialization error:', error);
+        console.debug('[auth] init failed', error);
         setUser(null);
         setIsGuest(false);
       } finally {
@@ -97,7 +97,7 @@ export function AuthProvider({ children, onAuthChange }: { children: React.React
       setIsGuest(false);
       onAuthChange?.(userData as User);
     } catch (error) {
-      console.error('Sign in error:', error);
+      console.debug('[auth] sign in failed', error);
       throw error;
     }
   };
@@ -119,7 +119,7 @@ export function AuthProvider({ children, onAuthChange }: { children: React.React
       setIsGuest(false);
       onAuthChange?.(userData as User);
     } catch (error) {
-      console.error('Register error:', error);
+      console.debug('[auth] register failed', error);
       throw error;
     }
   };
@@ -136,7 +136,7 @@ export function AuthProvider({ children, onAuthChange }: { children: React.React
       setIsGuest(true);
       onAuthChange?.(userData as User);
     } catch (error) {
-      console.error('Guest login error:', error);
+      console.debug('[auth] guest login failed', error);
       throw error;
     }
   };
@@ -145,7 +145,7 @@ export function AuthProvider({ children, onAuthChange }: { children: React.React
     try {
       await api.auth.logout();
     } catch (error) {
-      console.error('Logout error:', error);
+      console.debug('[auth] logout failed', error);
     } finally {
       localStorage.removeItem('raven_guest_mode');
       setUser(null);
