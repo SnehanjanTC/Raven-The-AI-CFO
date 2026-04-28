@@ -1,8 +1,9 @@
 from fastapi import APIRouter
-from app.api.v1.endpoints import auth, transactions, invoices, reports, dashboard, notifications, ai_proxy, chat, csv_upload, session, usage
+from app.api.v1.endpoints import auth, transactions, invoices, reports, dashboard, notifications, ai_proxy, chat, csv_upload, session, usage, company_profile
 
 api_router = APIRouter()
 api_router.include_router(auth.router, prefix="/auth", tags=["Auth"])
+api_router.include_router(company_profile.router, prefix="/company-profile", tags=["Company Profile"])
 api_router.include_router(transactions.router, prefix="/transactions", tags=["Transactions"])
 api_router.include_router(invoices.router, prefix="/invoices", tags=["Invoices"])
 api_router.include_router(reports.router, prefix="/reports", tags=["Reports"])

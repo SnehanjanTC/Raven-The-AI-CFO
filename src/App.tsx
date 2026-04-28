@@ -1,11 +1,11 @@
-import React, { Suspense, useEffect, useState, useCallback } from 'react';
+import React, { Suspense, useEffect, useState, useCallback, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { ChatLayout } from './layouts/ChatLayout';
 import { CommandBar } from './components/CommandBar';
 import { AIChatSidebar } from './components/AIChatSidebar';
 import { Login } from './pages/Login';
 import { NotificationProvider, useNotifications } from './components/NotificationProvider';
-import { AuthProvider, useAuth } from '@/shared/contexts';
+import { AuthProvider, useAuth, CompanyProfileProvider, useCompanyProfileContext } from '@/shared/contexts';
 import { ErrorBoundary } from '@/shared/errors';
 import { PageLoader } from '@/shared/ui';
 import { initSentry } from '@/lib/sentry';
@@ -24,6 +24,29 @@ const Integrations = React.lazy(() => import('./pages/Integrations').then(m => (
 const Kpis = React.lazy(() => import('./pages/Kpis').then(m => ({ default: m.Kpis })));
 const Privacy = React.lazy(() => import('./pages/Privacy').then(m => ({ default: m.Privacy })));
 const Terms = React.lazy(() => import('./pages/Terms').then(m => ({ default: m.Terms })));
+const Onboarding = lazy(() => import('@/pages/Onboarding'));
+
+/**
+ * Route guard: redirects new users to onboarding if their profile is empty.
+ * Wraps authenticated route content.
+ */
+function OnboardingGuard({ children }: { children: React.ReactNode }) {
+  const { profile, loading, completeness } = useCompanyProfileContext();
+  const location = useLocation();
+
+  // Don't redirect while profile is loading, or if already on onboarding/settings
+  const skipPaths = ['/onboarding', '/settings', '/login', '/privacy', '/terms'];
+  if (loading || skipPaths.some(p => location.pathname.startsWith(p))) {
+    return <>{children}</>;
+  }
+
+  // Redirect if profile is essentially empty (no company name and completeness is 0)
+  if (!profile.companyName && completeness === 0) {
+    return <Navigate to="/onboarding" replace />;
+  }
+
+  return <>{children}</>;
+}
 
 function AppContent() {
   const { isAuthenticated, loading } = useAuth();
@@ -92,11 +115,20 @@ function AppContent() {
           </Suspense>
         }
       />
+      <Route
+        path="/onboarding"
+        element={
+          <Suspense fallback={<PageLoader />}>
+            <Onboarding />
+          </Suspense>
+        }
+      />
       {/* All authenticated routes share ChatLayout as the shell */}
       <Route
         path="/*"
         element={
           isAuthenticated ? (
+            <OnboardingGuard>
             <ChatLayout
               commandBarOpen={commandBarOpen}
               onCommandBarOpenChange={setCommandBarOpen}
@@ -123,6 +155,7 @@ function AppContent() {
                 </Suspense>
               </ErrorBoundary>
             </ChatLayout>
+            </OnboardingGuard>
           ) : (
             <Navigate to="/login" replace />
           )
@@ -167,7 +200,9 @@ function AuthNotificationBridge({ children }: { children: React.ReactNode }) {
 
   return (
     <AuthProvider onAuthChange={handleAuthChange}>
-      {children}
+      <CompanyProfileProvider>
+        {children}
+      </CompanyProfileProvider>
     </AuthProvider>
   );
 }

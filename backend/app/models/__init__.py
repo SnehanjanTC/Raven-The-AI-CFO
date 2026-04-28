@@ -4,6 +4,7 @@ from app.models.invoice import Invoice
 from app.models.report import Report
 from app.models.notification import Notification
 from app.models.activity import ActivityLog
+from app.models.company_profile import CompanyProfile
 
 __all__ = [
     "User",
@@ -12,4 +13,5 @@ __all__ = [
     "Report",
     "Notification",
     "ActivityLog",
+    "CompanyProfile",
 ]
