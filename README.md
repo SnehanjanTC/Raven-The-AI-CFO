@@ -25,7 +25,7 @@ A Claude-powered financial dashboard with an AI copilot, custom KPI builder, Zoh
 - **Reports (`/reports`)** — Generate and export (Excel, PDF, PPTX) P&L, cash flow, and custom reports.
 - **Integrations (`/integrations`)** — Connect Zoho Books via MCP (OAuth). Pulls live MRR/ARR, invoices, and GST data.
 - **Settings (`/settings`)** — Profile, Claude API key management, demo-data toggle.
-- **OAuth login** — Google + Microsoft sign-in via Supabase Auth (with email/password as fallback).
+- **OAuth login** — Google + Microsoft sign-in via Supabase Auth (requires provider setup; see [Supabase + OAuth Setup](#supabase--oauth-setup)). Email/password works out of the box.
 
 ## Tech Stack
 
@@ -49,11 +49,11 @@ cp .env.example .env
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) and sign in with Google or Microsoft.
+Open [http://localhost:3000](http://localhost:3000) and sign in with email/password. To enable Google or Microsoft sign-in, complete the [Supabase + OAuth Setup](#supabase--oauth-setup) below.
 
 ## Supabase + OAuth Setup
 
-Raven uses Supabase Auth for Google and Microsoft sign-in.
+Raven uses Supabase Auth. Email/password works as soon as you've set the env vars below; Google and Microsoft sign-in require additional provider configuration in the Supabase dashboard.
 
 1. Create a project at [supabase.com](https://supabase.com).
 2. In **Authentication → Providers**, enable **Google** and **Microsoft (Azure)**.
