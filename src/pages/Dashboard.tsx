@@ -14,8 +14,10 @@ import {
 } from 'recharts';
 import { Download, TrendingUp, Flame, Plus, Clock, DollarSign, Wallet, BarChart3, X, Users, AlertCircle } from 'lucide-react';
 import { DetailModal, DetailStat, DetailProgress } from '@/components/DetailModal';
+import { ProfileSummaryCard } from '@/components/dashboard/ProfileSummaryCard';
 
 import { useMetrics } from '@/hooks/useMetrics';
+import { useCompanyProfile } from '@/hooks/useCompanyProfile';
 import { Metric } from '@/types';
 import { cn } from '@/lib/utils';
 import { api, type ZohoRevenueResponse } from '@/lib/api';
@@ -77,6 +79,7 @@ export function Dashboard() {
   const navigate = useNavigate();
   const [timeframe, setTimeframe] = React.useState('30d');
   const { loading, getMetric, metrics, refetch } = useMetrics(getInitialMetrics(), timeframe);
+  const { profile } = useCompanyProfile();
   const [selectedCard, setSelectedCard] = React.useState<string | null>(null);
   const [selectedExpense, setSelectedExpense] = React.useState<{ label: string; value: string; amount: number; pct: number } | null>(null);
   const [dismissedAnomalies, setDismissedAnomalies] = React.useState<string[]>([]);
@@ -335,6 +338,9 @@ export function Dashboard() {
           </button>
         </div>
       </div>
+
+      {/* PROFILE SUMMARY CARD */}
+      <ProfileSummaryCard profile={profile} />
 
       {/* METRICS GRID - 2 rows x 4 columns (or responsive) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

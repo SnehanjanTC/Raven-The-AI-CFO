@@ -4,7 +4,8 @@ import {
   RefreshCcw,
   Zap,
   TrendingUp,
-  LineChart as LineChartIcon
+  LineChart as LineChartIcon,
+  Info
 } from 'lucide-react';
 import {
   AreaChart,
@@ -20,20 +21,32 @@ import { Scenario } from '@/types';
 import { cn } from '@/lib/utils';
 import { DetailModal, DetailStat } from '@/components/DetailModal';
 import { isDemoDataLoaded, getDemoScenarioDefaults, formatCurrency, onDemoDataChange } from '@/lib/demo-data';
+import { useCompanyProfile } from '@/hooks/useCompanyProfile';
 
 export function Scenarios() {
+  const { profile } = useCompanyProfile();
+
   const [loading, setLoading] = useState(true);
   const [scenarios, setScenarios] = useState<Scenario[]>([]);
   const [savingScenarioName, setSavingScenarioName] = useState<string>('');
   const [showSaveInput, setShowSaveInput] = useState(false);
 
+  // Derive growth rate from profile stage if available
+  const getDefaultGrowth = () => {
+    if (profile.stage === 'pre-revenue') return 0;
+    if (profile.stage === 'early') return 10;
+    if (profile.stage === 'scaling') return 15;
+    if (profile.stage === 'growth') return 20;
+    return 15;
+  };
+
   // Simulation Parameters
-  const [growth, setGrowth] = useState(15);
-  const [churn, setChurn] = useState(2.5);
-  const [monthlyBurn, setMonthlyBurn] = useState(120000);
-  const [initialCash, setInitialCash] = useState(2500000);
-  // Real, fetched MRR (₹). Falls back to example value when nothing connected.
-  const [currentMrr, setCurrentMrr] = useState<number>(150000);
+  const [growth, setGrowth] = useState(getDefaultGrowth());
+  const [churn, setChurn] = useState(profile.monthlyChurnRate ?? 2.5);
+  const [monthlyBurn, setMonthlyBurn] = useState(profile.monthlyBurnRate ?? 120000);
+  const [initialCash, setInitialCash] = useState(profile.cashReserves ?? 2500000);
+  // Real, fetched MRR (₹). Falls back to profile monthlyRevenue, then example value when nothing connected.
+  const [currentMrr, setCurrentMrr] = useState<number>(profile.monthlyRevenue ?? 150000);
   // Where each parameter came from — drives the "example data" pill so users
   // never confuse a hardcoded placeholder with a live figure.
   const [paramSource, setParamSource] = useState<{
@@ -148,6 +161,20 @@ export function Scenarios() {
     return defaultRunway === -1 ? '12+' : defaultRunway;
   }, [projectionData]);
 
+  // Calculate runway impact: Cash Reserves / (Burn Rate - Revenue)
+  const runwayImpactMonths = useMemo(() => {
+    const netBurn = monthlyBurn - currentMrr;
+    if (netBurn <= 0) return null; // Positive cash flow, no concern
+    return initialCash / netBurn;
+  }, [initialCash, monthlyBurn, currentMrr]);
+
+  const getRunwayImpactColor = (months: number | null) => {
+    if (months === null) return { bg: 'bg-emerald-500/20', text: 'text-emerald-300', label: 'Cash Positive' };
+    if (months < 12) return { bg: 'bg-red-500/20', text: 'text-red-300', label: 'Critical' };
+    if (months < 18) return { bg: 'bg-yellow-500/20', text: 'text-yellow-300', label: 'At Risk' };
+    return { bg: 'bg-emerald-500/20', text: 'text-emerald-300', label: 'Healthy' };
+  };
+
   const handleSaveScenario = async () => {
     if (!savingScenarioName.trim()) return;
 
@@ -196,6 +223,16 @@ export function Scenarios() {
           )}
         </p>
       </section>
+
+      {/* Profile-Populated Info Banner */}
+      {profile.companyName && (
+        <div className="flex items-start gap-3 p-4 rounded-lg bg-blue-500/10 border border-blue-500/30">
+          <Info className="w-4 h-4 text-blue-400 flex-shrink-0 mt-0.5" />
+          <p className="text-xs text-blue-300">
+            Scenarios are pre-filled from your company profile. Edit values to explore what-if scenarios.
+          </p>
+        </div>
+      )}
 
       {/* Controls Bar */}
       <div className="glass-panel space-y-6 p-6 rounded-xl">
@@ -342,7 +379,7 @@ export function Scenarios() {
             </ResponsiveContainer>
           </div>
 
-          <div className="mt-4 grid grid-cols-3 gap-4 pt-4 border-t border-white/[0.06] text-center">
+          <div className="mt-4 grid grid-cols-4 gap-4 pt-4 border-t border-white/[0.06] text-center">
             <div>
               <p className="text-xs uppercase tracking-wider text-slate-500 font-bold mb-1">Final Treasury</p>
               <p className="text-sm font-bold text-white">
@@ -361,6 +398,14 @@ export function Scenarios() {
                 <Zap className={cn("w-3 h-3", churn > 5 ? "text-red-400" : "text-emerald-400")} />
                 <span className="text-xs font-bold text-white">{churn > 5 ? 'High' : 'Low'}</span>
               </div>
+            </div>
+            <div>
+              <p className="text-xs uppercase tracking-wider text-slate-500 font-bold mb-1">Runway Impact</p>
+              {runwayImpactMonths === null ? (
+                <p className="text-sm font-bold text-emerald-300">Positive CF</p>
+              ) : (
+                <p className="text-sm font-bold text-white">{runwayImpactMonths.toFixed(1)} mo</p>
+              )}
             </div>
           </div>
         </div>

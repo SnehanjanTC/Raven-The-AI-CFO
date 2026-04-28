@@ -26,6 +26,10 @@ export interface User {
   is_guest: boolean;
 }
 
+export interface CompanyProfileData {
+  [key: string]: any;
+}
+
 export interface AuthRegisterRequest {
   email: string;
   password: string;
@@ -480,6 +484,24 @@ export const auth = {
    */
   logout: (): void => {
     clearToken();
+  },
+};
+
+/**
+ * Company Profile API namespace
+ */
+export const companyProfile = {
+  get: async (): Promise<CompanyProfileData> => {
+    return fetchAPI<CompanyProfileData>('/api/v1/company-profile/', { method: 'GET' });
+  },
+  update: async (data: Record<string, any>): Promise<CompanyProfileData> => {
+    return fetchAPI<CompanyProfileData>('/api/v1/company-profile/', {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  },
+  completeness: async (): Promise<{ completeness: number; user_id: string }> => {
+    return fetchAPI<{ completeness: number; user_id: string }>('/api/v1/company-profile/completeness', { method: 'GET' });
   },
 };
 
@@ -1125,6 +1147,7 @@ export const team = {
  */
 export const api = {
   auth,
+  companyProfile,
   transactions,
   invoices,
   filings,

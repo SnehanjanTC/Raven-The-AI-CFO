@@ -11,6 +11,8 @@
  * Data is stored in localStorage with 'raven_demo_' prefix for easy identification.
  */
 
+import type { CompanyProfile } from '@/types/company-profile';
+
 // ============================================================================
 // INTERFACES
 // ============================================================================
@@ -931,6 +933,111 @@ const listeners: Set<() => void> = new Set();
 // ============================================================================
 
 /**
+ * Demo Company Profile 1: AcmeTech Solutions (B2B SaaS, Series A)
+ */
+export const DEMO_PROFILE_SAAS: CompanyProfile = {
+  companyName: 'AcmeTech Solutions Pvt Ltd',
+  entityType: 'pvt_ltd',
+  incorporationDate: '2022-03-15',
+  industryVertical: 'saas',
+  industrySubSector: 'Enterprise Workflow Automation',
+  businessModel: 'saas',
+  revenueModel: 'subscription',
+  avgDealSize: 500000,          // ₹5L
+  avgContractLengthMonths: 12,
+  fundingStage: 'series_a',
+  lastRaiseAmount: 80000000,    // ₹8Cr
+  totalCapitalRaised: 100000000, // ₹10Cr
+  lastRaiseDate: '2025-01-15',
+  cashReserves: 55000000,       // ₹5.5Cr
+  monthlyBurnRate: 3000000,     // ₹30L
+  monthlyRevenue: 800000,       // ₹8L
+  runwayTargetMonths: 18,
+  cac: 15000,                   // ₹15K
+  ltv: 180000,                  // ₹1.8L
+  paybackPeriodMonths: 12,
+  grossMarginTarget: 0.75,
+  netMarginTarget: 0.15,
+  customerType: 'b2b',
+  customerSegment: 'mid_market',
+  avgContractValue: 500000,      // ₹5L
+  monthlyChurnRate: 0.03,       // 3%
+  teamSize: 15,
+  engineeringHeadcount: 8,
+  salesHeadcount: 3,
+  opsHeadcount: 2,
+  contractorCount: 4,
+  nextFundraiseDate: '2026-06-01',
+  profitabilityTargetDate: '2027-03-31',
+  revenueTarget3m: 1200000,     // ₹12L
+  revenueTarget6m: 2000000,     // ₹20L
+  revenueTarget12m: 5000000,    // ₹50L
+  exitStrategy: 'acquisition',
+  operatingStates: ['MH', 'KA'],
+  hasGSTRegistration: true,
+  hasTANRegistration: true,
+  gstin: '27AABCA1234F1Z5',
+  pan: 'AABCA1234F',
+  auditorAppointed: true,
+  statutoryAuditRequired: false,
+  currentFY: '2025-26',
+  stage: 'early',
+  profileCompleteness: 95,
+};
+
+/**
+ * Demo Company Profile 2: FreshBasket (D2C, Bootstrapped)
+ */
+export const DEMO_PROFILE_D2C: CompanyProfile = {
+  companyName: 'FreshBasket India LLP',
+  entityType: 'llp',
+  incorporationDate: '2023-08-01',
+  industryVertical: 'ecommerce',
+  industrySubSector: 'Organic Food & Grocery D2C',
+  businessModel: 'd2c',
+  revenueModel: 'transactional',
+  avgDealSize: 1200,            // ₹1,200 per order
+  avgContractLengthMonths: undefined,
+  fundingStage: 'bootstrapped',
+  lastRaiseAmount: undefined,
+  totalCapitalRaised: 2500000,  // ₹25L (founder capital)
+  lastRaiseDate: undefined,
+  cashReserves: 800000,         // ₹8L
+  monthlyBurnRate: 350000,      // ₹3.5L
+  monthlyRevenue: 450000,       // ₹4.5L
+  runwayTargetMonths: 6,
+  cac: 250,                     // ₹250
+  ltv: 3600,                    // ₹3,600
+  paybackPeriodMonths: 2,
+  grossMarginTarget: 0.35,
+  netMarginTarget: 0.08,
+  customerType: 'b2c',
+  customerSegment: 'consumer',
+  avgContractValue: undefined,
+  monthlyChurnRate: 0.12,       // 12% (high for D2C)
+  teamSize: 6,
+  engineeringHeadcount: 1,
+  salesHeadcount: 2,
+  opsHeadcount: 2,
+  contractorCount: 3,
+  nextFundraiseDate: undefined,
+  profitabilityTargetDate: '2026-09-30',
+  revenueTarget3m: 600000,      // ₹6L
+  revenueTarget6m: 1000000,     // ₹10L
+  revenueTarget12m: 2500000,    // ₹25L
+  exitStrategy: 'lifestyle',
+  operatingStates: ['MH'],
+  hasGSTRegistration: true,
+  hasTANRegistration: false,
+  pan: 'AAXFB5678L',
+  auditorAppointed: false,
+  statutoryAuditRequired: false,
+  currentFY: '2025-26',
+  stage: 'early',
+  profileCompleteness: 88,
+};
+
+/**
  * Check if demo data is currently loaded in localStorage
  */
 export function isDemoDataLoaded(): boolean {
@@ -964,6 +1071,7 @@ export function loadDemoData(): DemoDataState {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   localStorage.setItem(STATE_KEY, 'loaded');
   localStorage.setItem(LOADED_AT_KEY, now);
+  localStorage.setItem('raven_demo_company_profile', JSON.stringify(DEMO_PROFILE_SAAS));
 
   // Notify listeners
   notifyListeners();
@@ -982,6 +1090,7 @@ export function clearDemoData(): void {
   localStorage.removeItem(STORAGE_KEY);
   localStorage.removeItem(STATE_KEY);
   localStorage.removeItem(LOADED_AT_KEY);
+  localStorage.removeItem('raven_demo_company_profile');
 
   // Notify listeners
   notifyListeners();

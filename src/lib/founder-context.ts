@@ -5,10 +5,11 @@
  * and plain-English communication patterns.
  */
 
-import { getTDSContext } from '@/domains/compliance/engines/tds';
-import { getGSTContext } from '@/domains/compliance/engines/gst';
-import { getPTaxContext } from '@/domains/compliance/engines/ptax';
-import { getIndianGAAPContext } from '@/domains/compliance/engines/indian-gaap';
+import { getTDSContext, getEnrichedTDSContext } from '@/domains/compliance/engines/tds';
+import { getGSTContext, getEnrichedGSTContext } from '@/domains/compliance/engines/gst';
+import { getPTaxContext, getEnrichedPTaxContext } from '@/domains/compliance/engines/ptax';
+import { getIndianGAAPContext, getEnrichedGAAPContext } from '@/domains/compliance/engines/indian-gaap';
+import type { CompanyProfile } from '@/types/company-profile';
 
 // ── Startup Profile & Stage ──────────────────────────────────────────────────
 
@@ -431,4 +432,375 @@ export function formatFounderDeadline(daysUntil: number, dueDate?: string): stri
     return new Date(dueDate).toLocaleDateString('en-IN', { month: 'short', day: 'numeric' });
   }
   return `in ${Math.ceil(daysUntil / 30)} months`;
+}
+
+// ── Enriched CFO Copilot System Prompt ────────────────────────────────────────
+
+/**
+ * Generate a deeply context-aware CFO Copilot system prompt from an enriched CompanyProfile.
+ * Includes company identity, financial position, unit economics, customer context, team context,
+ * financial goals, stage-specific guidance, and compliance obligations.
+ * Falls through to the legacy getCFOCopilotSystemPrompt if the profile is sparse.
+ */
+export function getEnrichedCFOCopilotSystemPrompt(profile: CompanyProfile): string {
+  // Check if this is a sparse profile (only legacy fields); fall back if so
+  const isSparseLegacyProfile =
+    !profile.businessModel &&
+    !profile.fundingStage &&
+    !profile.cashReserves &&
+    !profile.monthlyBurnRate &&
+    !profile.cac &&
+    !profile.ltv &&
+    !profile.customerType &&
+    !profile.teamSize;
+
+  if (isSparseLegacyProfile) {
+    // Convert to legacy StartupProfile and use old prompt
+    const legacyProfile: StartupProfile = {
+      name: profile.companyName,
+      stage: profile.stage,
+      monthlyRevenue: profile.monthlyRevenue || 0,
+      teamSize: 0,
+      operatingStates: profile.operatingStates,
+      hasGSTRegistration: profile.hasGSTRegistration,
+      hasTANRegistration: profile.hasTANRegistration,
+      incorporationDate: profile.incorporationDate,
+      sector: profile.industryVertical,
+      currentFY: profile.currentFY,
+    };
+    return getCFOCopilotSystemPrompt(legacyProfile);
+  }
+
+  // ── Build enriched prompt ────────────────────────────────────────────────
+
+  let prompt = `You are ${profile.companyName}'s personal CFO — a friendly, smart advisor who speaks plain English, not jargon.
+You understand their business deeply and adapt your advice to their specific stage and challenges.
+
+`;
+
+  // ── COMPANY IDENTITY ─────────────────────────────────────────────────────────
+  prompt += `## COMPANY IDENTITY & CONTEXT
+
+Business Profile:
+- What they do: ${profile.businessModel || 'N/A'} (${profile.industryVertical || 'sector not specified'})
+- Business model: ${profile.revenueModel || 'not specified'} revenue
+${profile.entityType ? `- Legal structure: ${profile.entityType.replace(/_/g, ' ')}` : ''}
+${profile.incorporationDate ? `- Incorporated: ${profile.incorporationDate}` : ''}
+${profile.industrySubSector ? `- Sub-sector: ${profile.industrySubSector}` : ''}
+
+Stage & Ambition:
+- Current stage: ${profile.stage}
+${profile.fundingStage ? `- Funding stage: ${profile.fundingStage.replace(/_/g, ' ')}` : '- Bootstrapped or pre-seed'}
+${profile.exitStrategy ? `- Exit vision: ${profile.exitStrategy}` : ''}
+
+`;
+
+  // ── FINANCIAL POSITION ───────────────────────────────────────────────────────
+  if (profile.monthlyRevenue !== undefined || profile.cashReserves !== undefined || profile.monthlyBurnRate !== undefined) {
+    prompt += `## FINANCIAL POSITION (Current State)
+
+`;
+    if (profile.monthlyRevenue !== undefined) {
+      const monthlyRev = profile.monthlyRevenue;
+      const annualRev = monthlyRev * 12;
+      prompt += `- Monthly revenue: ₹${(monthlyRev / 100000).toFixed(1)}L (₹${(annualRev / 10000000).toFixed(1)}Cr annually)
+`;
+    }
+    if (profile.cashReserves !== undefined) {
+      prompt += `- Cash reserves: ₹${(profile.cashReserves / 100000).toFixed(1)}L
+`;
+    }
+    if (profile.monthlyBurnRate !== undefined && profile.monthlyBurnRate > 0) {
+      const burnRate = profile.monthlyBurnRate;
+      const runway = profile.cashReserves && profile.monthlyBurnRate
+        ? Math.floor(profile.cashReserves / burnRate)
+        : 0;
+      prompt += `- Monthly burn rate: ₹${(burnRate / 100000).toFixed(1)}L
+`;
+      if (runway > 0) {
+        prompt += `- Runway: ${runway} months (${runway < 12 ? 'CRITICAL — raise soon' : runway < 18 ? 'URGENT — plan fundraise' : 'healthy window'})
+`;
+      }
+    }
+    prompt += '\n';
+  }
+
+  // ── UNIT ECONOMICS ───────────────────────────────────────────────────────────
+  if ((profile.monthlyRevenue || 0) > 0 && (profile.cac !== undefined || profile.ltv !== undefined)) {
+    prompt += `## UNIT ECONOMICS & Health Check
+
+`;
+    if (profile.cac !== undefined && profile.ltv !== undefined) {
+      const ratio = (profile.ltv / profile.cac).toFixed(1);
+      const health = parseFloat(ratio) > 3 ? 'HEALTHY' : parseFloat(ratio) > 2 ? 'OK' : 'CONCERNING';
+      prompt += `- CAC (Customer Acquisition Cost): ₹${(profile.cac / 1000).toFixed(0)}K
+- LTV (Lifetime Value): ₹${(profile.ltv / 1000).toFixed(0)}K
+- LTV/CAC Ratio: ${ratio}x (${health} — ${parseFloat(ratio) > 3 ? 'you earn 3x+ what you spend per customer' : 'work on margin or expansion'})
+`;
+    } else {
+      if (profile.cac !== undefined) prompt += `- CAC (Customer Acquisition Cost): ₹${(profile.cac / 1000).toFixed(0)}K\n`;
+      if (profile.ltv !== undefined) prompt += `- LTV (Lifetime Value): ₹${(profile.ltv / 1000).toFixed(0)}K\n`;
+    }
+
+    if (profile.paybackPeriodMonths !== undefined) {
+      prompt += `- Payback period: ${profile.paybackPeriodMonths} months (${profile.paybackPeriodMonths <= 6 ? 'efficient' : 'consider optimizing'})\n`;
+    }
+    if (profile.grossMarginTarget !== undefined || profile.netMarginTarget !== undefined) {
+      prompt += '- Target margins: ';
+      const parts = [];
+      if (profile.grossMarginTarget !== undefined) parts.push(`Gross ${(profile.grossMarginTarget * 100).toFixed(0)}%`);
+      if (profile.netMarginTarget !== undefined) parts.push(`Net ${(profile.netMarginTarget * 100).toFixed(0)}%`);
+      prompt += parts.join(', ') + '\n';
+    }
+    prompt += '\n';
+  }
+
+  // ── CUSTOMER CONTEXT ─────────────────────────────────────────────────────────
+  if (profile.customerType || profile.customerSegment || profile.avgContractValue !== undefined || profile.monthlyChurnRate !== undefined) {
+    prompt += `## CUSTOMER CONTEXT & Strategy
+
+`;
+    if (profile.customerType) {
+      const typeExplain = {
+        b2b: 'selling to businesses',
+        b2c: 'selling directly to consumers',
+        b2b2c: 'platform connecting businesses to consumers'
+      };
+      prompt += `- Customer type: ${typeExplain[profile.customerType] || profile.customerType}
+`;
+    }
+    if (profile.customerSegment) {
+      prompt += `- Target segment: ${profile.customerSegment.replace(/_/g, ' ')}
+`;
+    }
+    if (profile.avgContractValue !== undefined) {
+      prompt += `- Average contract value: ₹${(profile.avgContractValue / 100000).toFixed(1)}L
+`;
+    }
+    if (profile.monthlyChurnRate !== undefined) {
+      const churnPct = (profile.monthlyChurnRate * 100).toFixed(1);
+      const annual = (Math.pow(1 - profile.monthlyChurnRate, 12) * 100).toFixed(0);
+      prompt += `- Monthly churn: ${churnPct}% (keeping ~${annual}% annually — ${profile.monthlyChurnRate > 0.1 ? 'focus on retention' : 'good shape'})
+`;
+    }
+    prompt += '\n';
+  }
+
+  // ── TEAM CONTEXT ─────────────────────────────────────────────────────────────
+  if (profile.teamSize !== undefined || profile.engineeringHeadcount !== undefined || profile.salesHeadcount !== undefined) {
+    prompt += `## TEAM & Operations
+
+`;
+    if (profile.teamSize !== undefined) {
+      prompt += `- Total headcount: ${profile.teamSize} people
+`;
+      const engPercent = profile.engineeringHeadcount ? ((profile.engineeringHeadcount / profile.teamSize) * 100).toFixed(0) : null;
+      const salesPercent = profile.salesHeadcount ? ((profile.salesHeadcount / profile.teamSize) * 100).toFixed(0) : null;
+      const opsPercent = profile.opsHeadcount ? ((profile.opsHeadcount / profile.teamSize) * 100).toFixed(0) : null;
+
+      if (engPercent) prompt += `  - Engineering: ${profile.engineeringHeadcount} (${engPercent}%)
+`;
+      if (salesPercent) prompt += `  - Sales: ${profile.salesHeadcount} (${salesPercent}%)
+`;
+      if (opsPercent) prompt += `  - Ops/Admin: ${profile.opsHeadcount} (${opsPercent}%)
+`;
+    }
+    if (profile.contractorCount !== undefined && profile.contractorCount > 0) {
+      prompt += `- Contractors: ${profile.contractorCount} (watch TDS compliance)
+`;
+    }
+
+    // Flag composition issues
+    if (profile.teamSize && profile.engineeringHeadcount && profile.salesHeadcount) {
+      const engRatio = profile.engineeringHeadcount / profile.teamSize;
+      const salesRatio = profile.salesHeadcount / profile.teamSize;
+      if (engRatio > 0.7) {
+        prompt += `- FYI: Heavy on engineering — consider sales/GTM hire for next stage\n`;
+      }
+      if (salesRatio > 0.5 && profile.stage === 'early') {
+        prompt += `- FYI: Heavy on sales for early stage — validate product-market fit first\n`;
+      }
+    }
+    prompt += '\n';
+  }
+
+  // ── FINANCIAL GOALS ─────────────────────────────────────────────────────────
+  if (profile.nextFundraiseDate || profile.profitabilityTargetDate || profile.revenueTarget3m || profile.revenueTarget6m || profile.revenueTarget12m) {
+    prompt += `## FINANCIAL GOALS & Milestones
+
+`;
+    if (profile.nextFundraiseDate) {
+      const today = new Date();
+      const raiseDate = new Date(profile.nextFundraiseDate);
+      const daysUntil = Math.ceil((raiseDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+      prompt += `- Next fundraise: ${profile.nextFundraiseDate} (${daysUntil > 0 ? `${daysUntil} days away` : 'upcoming'})
+`;
+    }
+    if (profile.profitabilityTargetDate) {
+      prompt += `- Profitability target: ${profile.profitabilityTargetDate}
+`;
+    }
+    if (profile.revenueTarget3m || profile.revenueTarget6m || profile.revenueTarget12m) {
+      prompt += `- Revenue targets: `;
+      const targets = [];
+      if (profile.revenueTarget3m) targets.push(`₹${(profile.revenueTarget3m / 100000).toFixed(1)}L in 3mo`);
+      if (profile.revenueTarget6m) targets.push(`₹${(profile.revenueTarget6m / 100000).toFixed(1)}L in 6mo`);
+      if (profile.revenueTarget12m) targets.push(`₹${(profile.revenueTarget12m / 100000).toFixed(1)}L in 12mo`);
+      prompt += targets.join(' | ') + '\n';
+    }
+    prompt += '\n';
+  }
+
+  // ── STAGE-SPECIFIC GUIDANCE ──────────────────────────────────────────────────
+  prompt += `## STAGE-SPECIFIC KPI FOCUS
+
+Based on your ${profile.stage} stage${profile.businessModel ? ` ${profile.businessModel}` : ''}:
+`;
+
+  if (profile.stage === 'pre-revenue') {
+    prompt += `- Focus on: Burn rate, runway, design partner traction, unit economics
+- Key metrics: Monthly burn, cash reserves, customer discovery progress
+- Milestone: Get to ₹5-10L MRR with repeatble sales motion
+`;
+  } else if (profile.stage === 'early') {
+    if (profile.businessModel === 'saas') {
+      prompt += `- Focus on: MRR growth, month-over-month growth rate, churn, time-to-PMF
+- Key metrics: MoM growth %, CAC payback period, gross margin
+- Rule: Aim for 10% MoM growth; if not there, focus on product not scaling
+`;
+    } else if (profile.businessModel === 'marketplace') {
+      prompt += `- Focus on: GMV (Gross Merchandise Value), liquidity, take rate
+- Key metrics: Monthly GMV, supply/demand ratio, repeat rate
+- Rule: Balance supply growth with demand; watch cash burn carefully
+`;
+    } else if (profile.businessModel === 'd2c') {
+      prompt += `- Focus on: AOV (Average Order Value), repeat rate, contribution margin
+- Key metrics: CAC, LTV, repeat %, cash conversion cycle
+- Rule: Unit economics must be positive (LTV > 3x CAC)
+`;
+    } else {
+      prompt += `- Focus on: Revenue repeatability, unit economics, customer concentration
+- Key metrics: MRR/ARR growth, CAC payback, gross margin
+- Rule: Validate sustainable business model before scaling
+`;
+    }
+  } else if (profile.stage === 'scaling') {
+    if (profile.businessModel === 'saas') {
+      prompt += `- Focus on: NDR (Net Dollar Retention), NRR (Net Revenue Retention), magic number
+- Key metrics: Monthly churn <5%, CAC payback <12 months, Rule of 40
+- Rule: If not hitting these, optimize before burning more
+`;
+    } else if (profile.businessModel === 'marketplace') {
+      prompt += `- Focus on: Take rate optimization, category penetration, supply efficiency
+- Key metrics: GMV per supplier, customer lifetime value, ROAS
+- Rule: Reduce take rate friction while maintaining margins
+`;
+    } else {
+      prompt += `- Focus on: Revenue predictability, unit economics at scale, operational leverage
+- Key metrics: CAC payback, gross margin, opex ratio
+- Rule: Every dollar spent should generate >3x return
+`;
+    }
+  } else if (profile.stage === 'growth') {
+    if (profile.businessModel === 'saas') {
+      prompt += `- Focus on: ARR, magic number, burn multiple, Rule of 40
+- Key metrics: Annual recurring revenue, net retention >110%, CAC payback <18 months
+- Rule: Sustainable growth at CAC payback >3 years means fundraise soon
+`;
+    } else {
+      prompt += `- Focus on: Unit economics at scale, profitability path, operational efficiency
+- Key metrics: Revenue per employee, operating margin, customer payback
+- Rule: Aim for path to profitability; investors expect sub-3 year paths
+`;
+    }
+  }
+  prompt += '\n';
+
+  // ── COMPLIANCE CONTEXT ───────────────────────────────────────────────────────
+  // Convert to legacy profile to reuse compliance logic with entity-type awareness
+  const legacyProfile: StartupProfile = {
+    name: profile.companyName,
+    stage: profile.stage,
+    monthlyRevenue: profile.monthlyRevenue || 0,
+    teamSize: profile.teamSize || 0,
+    operatingStates: profile.operatingStates,
+    hasGSTRegistration: profile.hasGSTRegistration,
+    hasTANRegistration: profile.hasTANRegistration,
+    incorporationDate: profile.incorporationDate,
+    sector: profile.industryVertical,
+    currentFY: profile.currentFY,
+  };
+
+  const relevance = getRelevantCompliance(legacyProfile);
+
+  prompt += `## COMPLIANCE OBLIGATIONS & Deadlines
+
+Entity type: ${profile.entityType ? profile.entityType.replace(/_/g, ' ') : 'Not specified'}
+
+`;
+
+  if (relevance.tds.relevant) {
+    prompt += `### TDS (Tax Deducted at Source)
+${relevance.tds.reason}
+
+${getEnrichedTDSContext(profile)}
+
+`;
+  }
+
+  if (relevance.gst.relevant) {
+    prompt += `### GST (Goods & Services Tax)
+${relevance.gst.reason}
+
+${getEnrichedGSTContext(profile)}
+
+`;
+  }
+
+  if (relevance.ptax.relevant) {
+    prompt += `### Professional Tax
+${relevance.ptax.reason}
+
+${getEnrichedPTaxContext(profile)}
+
+`;
+  }
+
+  if (relevance.gaap.relevant) {
+    prompt += `### Accounting & P&L (Indian GAAP)
+${relevance.gaap.reason}
+
+${getEnrichedGAAPContext(profile)}
+
+`;
+  }
+
+  // ── INTERACTION PATTERNS ─────────────────────────────────────────────────────
+  prompt += `
+## HOW TO INTERACT WITH ME
+
+When I answer your questions:
+1. Start plain English: "Here's what's happening..."
+2. Then the number: "That means ₹X impact"
+3. Then the deadline: "Due by DATE"
+4. Then next steps: "Here's what to do..."
+5. Only go deep technical if you ask "Show me the rule"
+
+Examples of good answers:
+- Q: "Do I need GST?"
+  A: "Yes — revenue is ₹${(legacyProfile.monthlyRevenue / 100000).toFixed(1)}L/month, above the ₹20L threshold. File by the 20th; claim back GST on expenses."
+
+- Q: "How much TDS on a ₹10L vendor?"
+  A: "2% (₹20K) if they have PAN, 20% (₹2L) if not. Deposit by 7th of next month."
+
+NEVER:
+- Give investment advice or promise tax savings
+- File returns or forms on your behalf
+- Use jargon without explaining (translate "GSTR-3B" → "monthly GST filing")
+- Make up rules or rates
+- Be overly formal; be a mentor, not a lawyer
+
+You are a trusted advisor. Be warm, helpful, honest, and human.`;
+
+  return prompt;
 }
