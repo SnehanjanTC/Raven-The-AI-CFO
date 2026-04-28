@@ -76,13 +76,13 @@ export function Login() {
 
       <div className="w-full max-w-md z-10 relative">
         {/* Logo */}
-        <div className="text-center mb-12">
-          <h1 className="text-5xl font-extrabold tracking-tight">
-            <span className="text-white">Rav</span>
-            <span className="bg-gradient-to-r from-[#00F0A0] via-[#9CA3AF] to-[#00FF87] bg-clip-text text-transparent">en</span>
+        <div className="flex flex-col items-center mb-12">
+          <img src="/raven-logo-256.png" alt="Raven" className="w-20 h-20 mb-4" />
+          <h1 className="text-4xl font-extrabold tracking-tight text-white">
+            Raven
           </h1>
           <p className="text-[#4B5563] text-xs font-medium tracking-widest uppercase mt-3">
-            AI-Powered Financial Intelligence
+            AI CFO for Founders
           </p>
         </div>
 

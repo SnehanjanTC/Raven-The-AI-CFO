@@ -161,9 +161,7 @@ export const ChatLayout: React.FC<ChatLayoutProps> = ({
                 <Menu className="h-4 w-4" />
               </button>
             )}
-            <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center">
-              <span className="text-xs font-bold text-primary">R</span>
-            </div>
+            <img src="/raven-logo-64.png" alt="Raven" className="w-8 h-8 rounded-lg object-cover" />
             <span className="text-sm font-semibold text-slate-200 hidden sm:inline">Raven</span>
           </div>
 
