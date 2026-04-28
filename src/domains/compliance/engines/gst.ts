@@ -5,6 +5,8 @@
  * Last updated: FY 2025-26
  */
 
+import type { CompanyProfile } from '@/types/company-profile';
+
 export interface GSTRate {
   hsnChapter: string;
   description: string;
@@ -374,6 +376,95 @@ export function calculateLateFee(
     totalLateFee,
     notes: `Late fee for ${returnType}: ₹${dailyFeeRate}/day × ${daysLate} days = ₹${totalLateFee.toLocaleString('en-IN')} (capped at ₹${maxCap.toLocaleString('en-IN')}). ${isNilReturn ? '(Nil return applicable)' : ''}`
   };
+}
+
+// ── Enriched GST Context (Revenue & Entity-Aware) ──────────────────────
+export function getEnrichedGSTContext(profile: CompanyProfile): string {
+  let context = '## Enriched GST Compliance Context\n\n';
+
+  // Entity type GST context
+  context += `### Your Profile\n`;
+  context += `- Entity Type: ${profile.entityType?.toUpperCase() || 'Unknown'}\n`;
+  if (profile.businessModel) {
+    context += `- Business Model: ${profile.businessModel.toUpperCase()}\n`;
+  }
+  if (profile.monthlyRevenue) {
+    const annualRevenue = profile.monthlyRevenue * 12;
+    context += `- Monthly Revenue (estimate): ₹${profile.monthlyRevenue.toLocaleString('en-IN')}\n`;
+    context += `- Annual Revenue (projected): ₹${annualRevenue.toLocaleString('en-IN')}\n`;
+  }
+
+  // GST Registration Threshold Check
+  context += `\n### GST Registration Status\n`;
+  if (profile.hasGSTRegistration) {
+    context += `- GST Registered: Yes\n`;
+    if (profile.gstin) {
+      context += `- GSTIN: ${profile.gstin}\n`;
+    }
+  } else {
+    context += `- GST Registered: No (or not yet confirmed)\n`;
+  }
+
+  // Threshold Warning
+  const annualRev = profile.monthlyRevenue ? profile.monthlyRevenue * 12 : 0;
+  if (annualRev > 0) {
+    if (annualRev >= 1500000 && annualRev <= 2000000) {
+      context += `- WARNING: Revenue ₹${annualRev.toLocaleString('en-IN')} is approaching ₹20L threshold\n`;
+      context += `- ACTION: Proactively register for GST to avoid compliance issues\n`;
+    } else if (annualRev > 2000000 && !profile.hasGSTRegistration) {
+      context += `- URGENT: Revenue ₹${annualRev.toLocaleString('en-IN')} exceeds ₹20L — GST registration is MANDATORY\n`;
+    }
+
+    if (profile.businessModel === 'd2c' && annualRev >= 3500000 && annualRev <= 4000000) {
+      context += `- WARNING: For goods, revenue ₹${annualRev.toLocaleString('en-IN')} approaches ₹40L\n`;
+      context += `- NOTE: Composition scheme eligibility ends at ₹1.5Cr for goods\n`;
+    }
+  }
+
+  // Entity type GST obligations
+  context += `\n### GST Obligations by Entity Type\n`;
+  if (profile.entityType === 'pvt_ltd' || profile.entityType === 'llp') {
+    context += `- LLP/Pvt Ltd: Same GST obligations as all registered entities\n`;
+    context += `- Must file GSTR-1, GSTR-3B monthly; annual GSTR-9 if turnover >₹2Cr\n`;
+  } else if (profile.entityType === 'sole_proprietor') {
+    context += `- Sole Proprietor: GST registration follows same ₹20L threshold\n`;
+    context += `- GSTR-1 & GSTR-3B filing mandatory if registered\n`;
+  }
+
+  // Business Model GST Rate Context
+  context += `\n### GST Rate Guidance by Business Model\n`;
+  if (profile.businessModel === 'saas') {
+    context += `- SaaS (Software-as-a-Service): 18% GST on services\n`;
+    context += `- Revenue recognized over service period (AS-9), not upfront\n`;
+  } else if (profile.businessModel === 'marketplace') {
+    context += `- Marketplace: Only YOUR commission/take-rate counts as revenue, NOT GMV\n`;
+    context += `- May require TCS (Tax Collected at Source) — check with vendors\n`;
+    context += `- Rates depend on category of goods supplied by vendors\n`;
+  } else if (profile.businessModel === 'd2c') {
+    context += `- D2C (Direct-to-Consumer): Variable rates depending on product category\n`;
+    context += `- Standard: 18%, Electronics/Hardware: 12%, Luxury items: 28%\n`;
+    context += `- Revenue at point of delivery, net of returns\n`;
+  }
+
+  // Multi-state Supply Context
+  if (profile.operatingStates && profile.operatingStates.length > 1) {
+    context += `\n### Multi-State Supply — IGST Applicability\n`;
+    context += `- Operating States: ${profile.operatingStates.join(', ')}\n`;
+    context += `- IGST applies for inter-state supplies (not CGST+SGST)\n`;
+    context += `- Place of supply rules: Goods = destination; Services = recipient location\n`;
+    context += `- E-invoicing required if turnover >₹5Cr\n`;
+  }
+
+  // Return Filing Frequency
+  context += `\n### Key GST Filings\n`;
+  if (profile.monthlyRevenue && profile.monthlyRevenue > 250000) {
+    context += `- GSTR-1 (Outward supplies): Monthly by 11th\n`;
+    context += `- GSTR-3B (Tax payment): Monthly by 20th\n`;
+  }
+  context += `- GSTR-9 (Annual): December 31 if turnover >₹2Cr\n`;
+  context += `- GSTR-9C (Reconciliation): December 31 if turnover >₹5Cr\n`;
+
+  return context;
 }
 
 // ── Format for AI context injection ──────────────────────────────────────

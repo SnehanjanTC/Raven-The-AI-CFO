@@ -5,6 +5,8 @@
  * Last updated: FY 2025-26 (Budget 2025 rates)
  */
 
+import type { CompanyProfile } from '@/types/company-profile';
+
 export interface TDSRate {
   section: string;
   nature: string;
@@ -307,6 +309,64 @@ export function calculateTDSNonResident(
 // ── Get all rates for a section ──────────────────────────────────────────
 export function getRatesForSection(section: string): TDSRate[] {
   return TDS_RATES.filter(r => r.section === section);
+}
+
+// ── Enriched TDS Context (Entity-Aware) ──────────────────────────────────
+export function getEnrichedTDSContext(profile: CompanyProfile): string {
+  let context = '## Enriched TDS Compliance Context\n\n';
+
+  // Entity type context
+  context += `### Your Profile\n`;
+  context += `- Entity Type: ${profile.entityType?.toUpperCase() || 'Unknown'}\n`;
+
+  // TDS Deposit Schedule based on entity type
+  if (profile.entityType === 'pvt_ltd' || profile.entityType === 'opc') {
+    context += `- TDS Deposit Deadline: 7th of following month (government deductor-like rules apply)\n`;
+  } else if (profile.entityType === 'llp' || profile.entityType === 'partnership') {
+    context += `- TDS Deposit Deadline: 7th of following month (Sec 194A/194C timing varies by nature)\n`;
+  } else if (profile.entityType === 'sole_proprietor') {
+    context += `- TDS Deposit Deadline: 7th of following month\n`;
+  }
+
+  // Section 194C (Contractor) TDS Context
+  if (profile.contractorCount && profile.contractorCount > 0) {
+    context += `\n### Contractor TDS (Section 194C)\n`;
+    context += `- You have ${profile.contractorCount} contractor(s) in your network\n`;
+    context += `- TDS Applicability: 1% (Individual/HUF) or 2% (Others) when:\n`;
+    context += `  • Single payment exceeds ₹30,000, OR\n`;
+    context += `  • Aggregate payments in FY exceed ₹1,00,000\n`;
+    context += `- Deduct from EACH payment >₹30K or aggregate it to monitor the ₹1L threshold\n`;
+    context += `- Form 26Q (quarterly) must include all contractor payments\n`;
+  }
+
+  // Section 192 (Salary) TDS Context
+  if (profile.teamSize && profile.teamSize > 0) {
+    context += `\n### Salary TDS (Section 192)\n`;
+    context += `- Team Size: ${profile.teamSize} employees\n`;
+    context += `- Employer Responsibility: Deduct income tax from salary, deposit by 7th\n`;
+    context += `- No fixed rate — depends on employee's slab (₹2.5L to ₹5L tax slab coverage for FY 2025-26)\n`;
+    context += `- Form 16: Issue within 15 days of filing quarterly 24Q\n`;
+    context += `- Surcharge applicability depends on individual taxable income\n`;
+  }
+
+  // Tax Audit Impact
+  if (profile.auditorAppointed) {
+    context += `\n### Tax Audit Scrutiny\n`;
+    context += `- Your company has appointed an auditor\n`;
+    context += `- TDS records will be audited under Sec 44AB/92 (if turnover threshold met)\n`;
+    context += `- Ensure TDS deposits are on time — late deposits trigger Sec 201(1A) interest (1–1.5%/month)\n`;
+    context += `- TDS return reconciliation with bank challan (281) is mandatory\n`;
+  }
+
+  // General best practices
+  context += `\n### Key TDS Compliance Steps\n`;
+  context += `1. File quarterly TDS returns (Form 24Q, 26Q, 27Q as applicable) by deadline\n`;
+  context += `2. Maintain TDS deduction records (payee PAN, deduction date, amount)\n`;
+  context += `3. Deposit TDS by 7th of following month (challan 281)\n`;
+  context += `4. Issue Form 16/16A annually; reconcile with TRACES\n`;
+  context += `5. Monitor Section 206AB (higher rates) if you haven't filed IT returns\n`;
+
+  return context;
 }
 
 // ── Format for AI context injection ──────────────────────────────────────

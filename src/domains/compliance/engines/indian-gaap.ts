@@ -5,6 +5,8 @@
  * Last updated: FY 2025-26
  */
 
+import type { CompanyProfile } from '@/types/company-profile';
+
 // ── Accounting Standards Reference ───────────────────────────────────────
 export interface AccountingStandard {
   code: string;
@@ -546,6 +548,131 @@ export function calculateDepreciation(
     rate,
     usefulLife: asset.usefulLifeYears
   };
+}
+
+// ── Enriched Indian GAAP Context (Entity & Turnover-Aware) ───────────────
+export function getEnrichedGAAPContext(profile: CompanyProfile): string {
+  let context = '## Enriched Indian GAAP & Audit Compliance Context\n\n';
+
+  context += `### Your Company Profile\n`;
+  context += `- Entity Type: ${profile.entityType?.toUpperCase() || 'Unknown'}\n`;
+
+  // Calculate incorporation years
+  let yearsIncorporated = 0;
+  if (profile.incorporationDate) {
+    const incorporationYear = new Date(profile.incorporationDate).getFullYear();
+    const currentYear = new Date().getFullYear();
+    yearsIncorporated = currentYear - incorporationYear;
+    context += `- Incorporation Date: ${profile.incorporationDate}\n`;
+    context += `- Years Incorporated: ${yearsIncorporated}\n`;
+  }
+
+  const annualRev = profile.monthlyRevenue ? profile.monthlyRevenue * 12 : 0;
+  if (annualRev > 0) {
+    context += `- Annual Turnover (estimated): ₹${annualRev.toLocaleString('en-IN')}\n`;
+  }
+
+  // Statutory Audit Requirement Determination
+  context += `\n### Statutory Audit Requirement\n`;
+
+  let auditRequired = false;
+  let auditReason = '';
+
+  switch (profile.entityType) {
+    case 'pvt_ltd':
+      auditRequired = true;
+      auditReason = 'Private Limited companies must have statutory audit under Companies Act 2013 (Section 138) — MANDATORY, no turnover threshold';
+      break;
+
+    case 'opc':
+      if (annualRev > 200000000) {  // ₹2Cr
+        auditRequired = true;
+        auditReason = 'OPC with turnover >₹2Cr: Statutory audit required (Sec 44AB)';
+      }
+      break;
+
+    case 'llp':
+      if (annualRev > 4000000 || (profile.totalCapitalRaised && profile.totalCapitalRaised > 2500000)) {
+        auditRequired = true;
+        auditReason = `LLP with turnover >₹40L or capital >₹25L: Statutory audit required`;
+      }
+      break;
+
+    case 'partnership':
+    case 'sole_proprietor':
+      if (annualRev > 100000000) {  // ₹1Cr
+        auditRequired = true;
+        auditReason = 'Partnership/Sole Proprietor with turnover >₹1Cr: Tax audit required under Sec 44AB';
+      }
+      break;
+
+    default:
+      break;
+  }
+
+  if (auditRequired) {
+    context += `- AUDIT REQUIRED: ${auditReason}\n`;
+    if (!profile.auditorAppointed) {
+      context += `- URGENT: No auditor appointed yet. You must appoint a Chartered Accountant immediately.\n`;
+    } else {
+      context += `- Auditor Status: Appointed (good compliance posture)\n`;
+    }
+  } else {
+    context += `- Audit Status: NOT required for your entity type/turnover\n`;
+    if (profile.auditorAppointed) {
+      context += `- Note: Even though not mandatory, you've appointed an auditor (best practice for credibility)\n`;
+    }
+  }
+
+  // Revenue Recognition by Business Model
+  context += `\n### Revenue Recognition Guidance (AS-9)\n`;
+  if (profile.businessModel === 'saas' || profile.businessModel === 'hybrid') {
+    context += `- SaaS/Subscription Revenue: Recognized OVER service period, NOT upfront\n`;
+    context += `  • Monthly/annual subscription: recognize ratably over months/year\n`;
+    context += `  • One-time setup fees: can be recognized upfront (with supporting policy)\n`;
+    context += `  • Refunds: reduce revenue if probable\n`;
+  }
+
+  if (profile.businessModel === 'marketplace') {
+    context += `- Marketplace Revenue: ONLY commission/take-rate counts — NOT Gross Merchandise Value\n`;
+    context += `  • GMV is a vanity metric; report it separately but not as revenue\n`;
+    context += `  • Commission revenue recognized when transaction settles\n`;
+    context += `  • Refunds/chargebacks reduce revenue immediately\n`;
+  }
+
+  if (profile.businessModel === 'd2c' || profile.businessModel === 'hardware') {
+    context += `- D2C/Goods Revenue: Recognized at point of delivery/customer acceptance\n`;
+    context += `  • Revenue is NET of returns and refunds\n`;
+    context += `  • Warranty claims reduce revenue if measurable\n`;
+    context += `  • FOB rules: Incoterm determines revenue recognition date\n`;
+  }
+
+  // Startup India Benefits
+  if (yearsIncorporated <= 10 && annualRev < 1000000000) {  // <₹100Cr
+    context += `\n### Startup India Benefits (Eligible)\n`;
+    context += `- Your company is likely eligible for Startup India benefits\n`;
+    context += `- Benefits: Income tax holiday (Sec 80-IAC), exemption from angel tax, trademark/patent fee waiver\n`;
+    context += `- Note: Ensure incorporation via registration with Startup India portal\n`;
+  }
+
+  // Key Accounting Standards to track
+  context += `\n### Critical Accounting Standards for Your Business\n`;
+  context += `- AS-1: Accounting Policy disclosures (consistency, going concern)\n`;
+  context += `- AS-2: Inventory valuation (if applicable) — FIFO/Weighted Avg only\n`;
+  context += `- AS-6: Depreciation (if you have fixed assets) — SLM or WDV method\n`;
+  context += `- AS-9: Revenue Recognition — critical for SaaS/marketplace/goods models\n`;
+  context += `- AS-15: Employee Benefits — gratuity requires actuarial valuation\n`;
+  context += `- AS-22: Deferred Tax — timing differences and MAT credit tracking\n`;
+
+  // Schedule III P&L Format
+  context += `\n### Schedule III P&L Format (Mandatory)\n`;
+  context += `- All Indian companies must file financials in Schedule III format\n`;
+  context += `- Revenue from Operations (gross less returns, excise, GST)\n`;
+  context += `- Other Income (interest, dividend, gain on investments)\n`;
+  context += `- Expenses by category (cost of materials, employee benefits, depreciation, finance costs)\n`;
+  context += `- Profit Before Tax → Tax Expense → Profit After Tax\n`;
+
+  return context;
 }
 
 // ── Format for AI context injection ──────────────────────────────────────

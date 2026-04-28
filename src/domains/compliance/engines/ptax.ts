@@ -5,6 +5,8 @@
  * Last updated: FY 2025-26
  */
 
+import type { CompanyProfile } from '@/types/company-profile';
+
 export interface PTaxSlab {
   minSalary: number;      // Monthly salary ₹ (inclusive)
   maxSalary: number | null; // null = no upper limit
@@ -314,6 +316,109 @@ export function calculatePTaxPayroll(
     totalMonthly: results.reduce((sum, r) => sum + r.monthlyTax, 0),
     totalAnnual: results.reduce((sum, r) => sum + r.annualTax, 0),
   };
+}
+
+// ── Enriched P-Tax Context (Team & State-Aware) ──────────────────────────
+export function getEnrichedPTaxContext(profile: CompanyProfile): string {
+  let context = '## Enriched Professional Tax Compliance Context\n\n';
+
+  // Team composition
+  context += `### Your Team\n`;
+  if (profile.teamSize && profile.teamSize > 0) {
+    context += `- Total Team Size: ${profile.teamSize}\n`;
+    if (profile.engineeringHeadcount) {
+      context += `  • Engineering: ${profile.engineeringHeadcount}\n`;
+    }
+    if (profile.salesHeadcount) {
+      context += `  • Sales: ${profile.salesHeadcount}\n`;
+    }
+    if (profile.opsHeadcount) {
+      context += `  • Operations: ${profile.opsHeadcount}\n`;
+    }
+  }
+
+  // Contractor vs Employee distinction
+  if (profile.contractorCount && profile.contractorCount > 0) {
+    context += `- Contractor Count: ${profile.contractorCount}\n`;
+    context += `- IMPORTANT: Contractors are NOT subject to Professional Tax\n`;
+    context += `- PT applies ONLY to employees on your payroll\n`;
+  }
+
+  // Operating states with specific PT info
+  if (profile.operatingStates && profile.operatingStates.length > 0) {
+    context += `\n### Professional Tax by Operating State\n`;
+
+    const stateConfig: { [key: string]: { threshold: number; monthlyRate: number; cap: number; notes: string } } = {
+      'MH': { threshold: 7500, monthlyRate: 175, cap: 2500, notes: 'Feb special: ₹300 for salary >₹10K' },
+      'KA': { threshold: 25000, monthlyRate: 200, cap: 2500, notes: 'Revised Apr 2025: exemption raised to ₹25K' },
+      'WB': { threshold: 10000, monthlyRate: 110, cap: 2500, notes: 'Graduated slabs' },
+      'TS': { threshold: 15000, monthlyRate: 150, cap: 2500, notes: 'Telangana specific rates' },
+      'AP': { threshold: 15000, monthlyRate: 150, cap: 2500, notes: 'Andhra Pradesh specific rates' },
+      'TN': { threshold: 21000, monthlyRate: 100, cap: 2500, notes: 'Half-yearly filing; progressive slabs' },
+      'GJ': { threshold: 12000, monthlyRate: 200, cap: 2500, notes: 'Gujarat rates' },
+      'MP': { threshold: 18750, monthlyRate: 125, cap: 2500, notes: 'Madhya Pradesh rates' },
+      'DL': { threshold: null, monthlyRate: 0, cap: 0, notes: 'Delhi: NO Professional Tax' },
+    };
+
+    profile.operatingStates.forEach(state => {
+      const config = stateConfig[state.toUpperCase()];
+      if (config) {
+        if (config.monthlyRate === 0) {
+          context += `\n- ${state.toUpperCase()}: NO Professional Tax applicable\n`;
+        } else {
+          context += `\n- ${state.toUpperCase()}:\n`;
+          context += `  • Exemption threshold: ₹${config.threshold?.toLocaleString('en-IN') || 'N/A'}/month\n`;
+          context += `  • Tax rate: ₹${config.monthlyRate}/month (above threshold)\n`;
+          context += `  • Annual cap: ₹${config.cap.toLocaleString('en-IN')}\n`;
+          if (config.notes) {
+            context += `  • Note: ${config.notes}\n`;
+          }
+        }
+      }
+    });
+  }
+
+  // PT Liability Calculation (rough estimate)
+  if (profile.teamSize && profile.teamSize > 0 && profile.operatingStates) {
+    context += `\n### Estimated Monthly PT Liability\n`;
+    let estimatedMonthly = 0;
+    let estimatedAnnual = 0;
+
+    // Simple estimate: assume avg salary ₹50K per employee
+    const avgSalary = 50000;
+
+    profile.operatingStates.forEach(state => {
+      const calc = calculatePTax(state.toUpperCase().substring(0, 2), avgSalary);
+      if (calc && calc.applicable) {
+        estimatedMonthly += calc.monthlyTax * (profile.teamSize || 0);
+      }
+    });
+
+    estimatedAnnual = Math.min(estimatedMonthly * 12, 2500 * (profile.teamSize || 0));
+
+    context += `- Rough estimate (assuming ₹50K avg salary): ₹${estimatedMonthly.toLocaleString('en-IN')}/month\n`;
+    context += `- Estimated annual: ₹${estimatedAnnual.toLocaleString('en-IN')}\n`;
+    context += `- Note: This is approximate — actual PT depends on individual salary slabs\n`;
+  }
+
+  // Employer PT Fee
+  context += `\n### Employer Professional Tax\n`;
+  if (profile.operatingStates && profile.operatingStates.length > 0) {
+    context += `- Employer PT (separate from employee PT): ₹1,500–₹2,500/year per state\n`;
+    context += `- Registration Certificate (PTRC) required for deduction authority\n`;
+    context += `- Enrollment Certificate (PTEC) required for employer registration\n`;
+  }
+
+  // Compliance notes
+  context += `\n### PT Compliance Checklist\n`;
+  context += `1. Maintain payroll records with salary and PT deducted\n`;
+  context += `2. Deposit PT monthly/quarterly as per state rules\n`;
+  context += `3. Issue salary slips showing PT deduction\n`;
+  context += `4. File state PT returns (varies by state — check calendar)\n`;
+  context += `5. Renew employer registration annually\n`;
+  context += `6. Non-compliance penalty: up to ₹5,000 + prosecution risk\n`;
+
+  return context;
 }
 
 // ── Format for AI context injection ──────────────────────────────────────
