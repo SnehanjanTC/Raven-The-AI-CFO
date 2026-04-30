@@ -226,8 +226,8 @@ describe('founder-context', () => {
       });
 
       it('includes focus on design partner traction', () => {
-        const prompt = getEnrichedCFOCopilotSystemPrompt(PRE_REVENUE_PROFILE);
-        expect(prompt.toLowerCase()).toContain('design partner') || expect(prompt.toLowerCase()).toContain('traction');
+        const prompt = getEnrichedCFOCopilotSystemPrompt(PRE_REVENUE_PROFILE).toLowerCase();
+        expect(prompt.includes('design partner') || prompt.includes('traction')).toBe(true);
       });
     });
 

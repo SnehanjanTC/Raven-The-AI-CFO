@@ -174,7 +174,8 @@ function CompanyProfilePanel() {
     try {
       const updates: Partial<CompanyProfile> = {};
       dirty.forEach(field => {
-        updates[field as keyof CompanyProfile] = profile[field as keyof CompanyProfile];
+        const k = field as keyof CompanyProfile;
+        (updates as Record<keyof CompanyProfile, unknown>)[k] = profile[k];
       });
 
       const updated = await companyProfileAPI.update(updates);
