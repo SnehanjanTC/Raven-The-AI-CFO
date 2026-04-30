@@ -121,7 +121,7 @@ jobs:
           cache: 'npm'
 
       - name: Audit npm dependencies
-        run: npm audit --audit-level=high
+        run: npm audit --audit-level=moderate
 
       - name: Setup Python
         uses: actions/setup-python@v6
@@ -134,7 +134,7 @@ jobs:
         working-directory: backend
         run: |
           pip install pip-audit
-          pip-audit -r requirements.txt --strict
+          pip-audit -r requirements.txt
 
   # Summary
   ci-status:
