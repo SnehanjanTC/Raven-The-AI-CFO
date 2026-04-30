@@ -63,7 +63,9 @@ export function useCompanyProfile() {
         revenueTarget6m: data.revenueTarget6m,
         revenueTarget12m: data.revenueTarget12m,
         exitStrategy: data.exitStrategy,
-        operatingStates: data.operatingStates ? JSON.parse(data.operatingStates) : [],
+        operatingStates: typeof data.operatingStates === 'string'
+          ? JSON.parse(data.operatingStates)
+          : (data.operatingStates || []),
         hasGSTRegistration: data.hasGSTRegistration || false,
         hasTANRegistration: data.hasTANRegistration || false,
         gstin: data.gstin,
