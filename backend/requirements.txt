@@ -1,7 +1,7 @@
 # Raven Backend Dependencies
 
 # Core Framework
-fastapi>=0.115.0
+fastapi>=0.136.1
 uvicorn[standard]>=0.30.0
 
 # Database
