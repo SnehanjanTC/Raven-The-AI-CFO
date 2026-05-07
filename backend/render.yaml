@@ -4,12 +4,7 @@ services:
     env: docker
     dockerfilePath: ./Dockerfile
     region: oregon
-    plan: standard
-    scaling:
-      minInstances: 1
-      maxInstances: 3
-      targetMemoryUtilizationPercentage: 70
-      targetCPUUtilizationPercentage: 80
+    plan: free
 
     # Port configuration
     port: 8000
@@ -26,6 +21,8 @@ services:
         value: production
       - key: PYTHONUNBUFFERED
         value: "1"
+      - key: DATABASE_URL
+        sync: false
       - key: ANTHROPIC_API_KEY
         sync: false
       - key: SUPABASE_URL

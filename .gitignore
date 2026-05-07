@@ -33,6 +33,12 @@ npm-debug.log*
 # Credentials & tokens
 backend/zoho_mcp_tokens.json
 *.tokens.json
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+.envrc
 
 # Coverage
 coverage/

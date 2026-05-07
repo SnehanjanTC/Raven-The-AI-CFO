@@ -7,6 +7,7 @@ import { SuggestionChips } from './SuggestionChips';
 import { TypingIndicator } from './TypingIndicator';
 import { useChat } from '@/hooks/useChat';
 import { useSession } from '@/hooks/useSession';
+import { useAuth } from '@/shared/contexts/AuthContext';
 import { NudgeCard } from '@/components/cards/NudgeCard';
 
 // Message virtualization constants
@@ -49,6 +50,7 @@ export const ChatView = forwardRef<ChatViewRef, ChatViewProps>(
   ({ onMessageSend }, ref) => {
     const { messages, isStreaming, error, suggestions, sendMessage, clearError } = useChat();
     const { sessionData, isLoading: sessionLoading } = useSession();
+    const { user } = useAuth();
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const messagesContainerRef = useRef<HTMLDivElement>(null);
     const scrollRafRef = useRef<number | null>(null);
@@ -226,14 +228,18 @@ export const ChatView = forwardRef<ChatViewRef, ChatViewProps>(
       return 'Good evening';
     };
 
-    // Get display name from session or fallback
+    // Get display name in priority order: session greeting > auth full_name > email local-part > "there"
     const getDisplayName = () => {
-      const greeting = sessionData?.greeting || 'Snehanjan';
-      // Extract name if greeting includes a comma (e.g., "Good morning, Snehanjan")
-      if (greeting.includes(',')) {
-        return greeting.split(',')[1]?.trim() || greeting;
+      const sessionGreeting = sessionData?.greeting;
+      if (sessionGreeting) {
+        // Extract name if greeting includes a comma (e.g., "Good morning, Alex")
+        return sessionGreeting.includes(',')
+          ? sessionGreeting.split(',')[1]?.trim() || sessionGreeting
+          : sessionGreeting;
       }
-      return greeting;
+      if (user?.full_name) return user.full_name.split(' ')[0];
+      if (user?.email) return user.email.split('@')[0];
+      return 'there';
     };
 
     // Get metrics from session or demo data
