@@ -15,6 +15,14 @@ A Claude-powered financial dashboard with an AI copilot, custom KPI builder, Zoh
 
 ---
 
+## Screenshots
+
+| Chat & Pulse | KPI Builder | Reports |
+|:---:|:---:|:---:|
+| ![Chat & financial pulse](docs/screenshots/chat.png) | ![Custom KPI Builder](docs/screenshots/kpis.png) | ![Reports & AI Auditor](docs/screenshots/reports.png) |
+
+---
+
 ## Features
 
 - **AI Copilot (`/chat`)** — Conversational CFO powered by Anthropic Claude. Streams answers, remembers conversation history, and can ingest CSVs.
