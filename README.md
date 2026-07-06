@@ -1,3 +1,5 @@
+[![MseeP.ai Security Assessment Badge](https://mseep.net/pr/snehanjantc-raven-the-ai-cfo-badge.png)](https://mseep.ai/app/snehanjantc-raven-the-ai-cfo)
+
 <div align="center">
 
 # Raven
