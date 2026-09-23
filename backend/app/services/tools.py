@@ -14,6 +14,9 @@ from collections import defaultdict
 from app.models.transaction import Transaction
 from app.models.invoice import Invoice
 from app.services.metrics import compute_all_metrics, get_expense_breakdown
+from app.services.proposals import (
+    create_proposal, NotConfiguredError, ProposalError,
+)
 
 
 # Categories that count as Cost of Goods Sold
@@ -327,62 +330,58 @@ async def update_metrics(
     supabase_key: str,
     user_id: str,
     metrics_data: dict,
+    conversation_id: Optional[str] = None,
+    reason: Optional[str] = None,
 ) -> dict:
     """
-    Update user's financial metrics manually.
-    This upserts metric snapshots for the current period.
+    Agent-facing tool: PROPOSE a metric update for human review.
+
+    Never writes to the metrics table directly. Lands a row in agent_proposals
+    with status='pending'; the founder approves or rejects it from the UI.
+    The actual write happens inside app.services.proposals — the only place
+    metric rows can be modified from the agent flow.
 
     Args:
-        supabase_url: Supabase project URL
-        supabase_key: Supabase service key
+        supabase_url: Supabase project URL (kept in the signature for
+            backwards compatibility with existing callers)
+        supabase_key: Supabase service key (same, unused here)
         user_id: User ID
-        metrics_data: Dict with optional fields:
-            - mrr: Monthly recurring revenue
-            - monthly_expenses: Monthly expenses
-            - cash_balance: Current cash balance
-            - company_name: Company name
-            - startup_stage: Startup stage
+        metrics_data: Dict with one metric snapshot to upsert:
+            - label: Metric label (e.g. "MRR", "Cash Balance")  [required]
+            - value: Display value (string)                     [required]
+            - change: Optional delta string ("+12%")
+            - trend: Optional "up" | "down" | "stable"
+            - subtext: Optional context ("vs. last month")
+            - category: Optional ("financial", ...)
+        conversation_id: Conversation the proposal belongs to (for audit)
+        reason: Agent's rationale for the change (recorded on the proposal)
 
     Returns:
-        Confirmation dict with saved data
+        A payload the agent can quote back to the founder, including
+        the proposal_id so the UI can deep-link to the review card.
     """
-
-    headers = {
-        "apikey": supabase_key,
-        "Authorization": f"Bearer {supabase_key}",
-        "Content-Type": "application/json",
-        "Prefer": "return=representation",
-    }
-
-    # Update user metadata if provided
-    if "company_name" in metrics_data or "startup_stage" in metrics_data:
-        update_payload = {}
-        if "company_name" in metrics_data:
-            update_payload["company_name"] = metrics_data["company_name"]
-        if "startup_stage" in metrics_data:
-            update_payload["startup_stage"] = metrics_data["startup_stage"]
-
-        url = f"{supabase_url}/rest/v1/users?id=eq.{user_id}"
-
-        try:
-            async with httpx.AsyncClient(timeout=10.0) as client:
-                response = await client.patch(
-                    url,
-                    headers=headers,
-                    json=update_payload,
-                )
-                if response.status_code not in (200, 204):
-                    print(f"Error updating user metadata: {response.status_code} {response.text}")
-        except Exception as e:
-            print(f"Error updating user metadata: {e}")
-
-    # Log which metrics were updated
-    saved_fields = {k: v for k, v in metrics_data.items() if k in ["mrr", "monthly_expenses", "cash_balance"]}
+    try:
+        proposal = await create_proposal(
+            user_id=user_id,
+            kind="update_metric",
+            payload=metrics_data,
+            reason=reason,
+            conversation_id=conversation_id,
+        )
+    except NotConfiguredError as exc:
+        return {"status": "not_configured", "message": str(exc)}
+    except ProposalError as exc:
+        return {"status": "error", "message": str(exc)}
 
     return {
-        "status": "confirmed",
-        "message": "Metrics updated successfully",
-        "saved_fields": saved_fields,
+        "status": "pending_review",
+        "proposal_id": proposal.get("id"),
+        "message": (
+            "Drafted a metric update. It will only be applied once you approve "
+            "it in the review drawer."
+        ),
+        "kind": "update_metric",
+        "payload": metrics_data,
         "timestamp": datetime.utcnow().isoformat(),
     }
 
@@ -392,79 +391,60 @@ async def add_transaction(
     supabase_key: str,
     user_id: str,
     transaction_data: dict,
+    conversation_id: Optional[str] = None,
+    reason: Optional[str] = None,
 ) -> dict:
     """
-    Record a new manual transaction.
+    Agent-facing tool: PROPOSE a new transaction for human review.
+
+    Never inserts into `transactions` directly. Lands a row in agent_proposals
+    with status='pending'. Approval routes through app.services.proposals,
+    which is the only file allowed to commit to `transactions`.
 
     Args:
-        supabase_url: Supabase project URL
-        supabase_key: Supabase service key
+        supabase_url / supabase_key: kept for signature compatibility
         user_id: User ID
         transaction_data: Dict with fields:
-            - date: YYYY-MM-DD format
-            - description: Transaction description
-            - amount: Transaction amount (positive)
-            - type: "income" or "expense"
-            - category: Category (e.g., "SaaS", "Salary")
+            - date: YYYY-MM-DD
+            - description: str
+            - amount: number (positive)
+            - type: "income" | "expense"
+            - category: str
+        conversation_id: For audit linkage
+        reason: Agent's rationale for the transaction
 
     Returns:
-        Confirmation dict with saved transaction
+        Proposal envelope with proposal_id, kind, and the payload the
+        founder will see in the review drawer.
     """
-
-    headers = {
-        "apikey": supabase_key,
-        "Authorization": f"Bearer {supabase_key}",
-        "Content-Type": "application/json",
-        "Prefer": "return=representation",
-    }
-
-    # Prepare transaction payload
     payload = {
-        "user_id": user_id,
         "date": transaction_data.get("date"),
         "description": transaction_data.get("description"),
-        "amount": float(transaction_data.get("amount", 0)),
-        "type": transaction_data.get("type", "expense"),  # income or expense
+        "amount": float(transaction_data.get("amount", 0) or 0),
+        "type": transaction_data.get("type", "expense"),
         "category": transaction_data.get("category", "Other"),
-        "status": "cleared",
     }
-
-    url = f"{supabase_url}/rest/v1/transactions"
-
     try:
-        async with httpx.AsyncClient(timeout=10.0) as client:
-            response = await client.post(
-                url,
-                headers=headers,
-                json=payload,
-            )
-            if response.status_code in (200, 201):
-                result = response.json()
-                if isinstance(result, list) and result:
-                    txn = result[0]
-                else:
-                    txn = result
-                return {
-                    "status": "confirmed",
-                    "message": f"Transaction recorded: {payload['description']}",
-                    "transaction_id": txn.get("id") if isinstance(txn, dict) else None,
-                    "data": {
-                        "date": payload["date"],
-                        "description": payload["description"],
-                        "amount": payload["amount"],
-                        "type": payload["type"],
-                        "category": payload["category"],
-                    },
-                    "timestamp": datetime.utcnow().isoformat(),
-                }
-            else:
-                return {
-                    "status": "error",
-                    "message": f"Failed to record transaction: {response.status_code}",
-                    "error_detail": response.text,
-                }
-    except Exception as e:
-        return {
-            "status": "error",
-            "message": f"Error recording transaction: {str(e)}",
-        }
+        proposal = await create_proposal(
+            user_id=user_id,
+            kind="add_transaction",
+            payload=payload,
+            reason=reason,
+            conversation_id=conversation_id,
+        )
+    except NotConfiguredError as exc:
+        return {"status": "not_configured", "message": str(exc)}
+    except ProposalError as exc:
+        return {"status": "error", "message": str(exc)}
+
+    return {
+        "status": "pending_review",
+        "proposal_id": proposal.get("id"),
+        "message": (
+            f"Drafted a {payload['type']} for {payload['description']!r}. "
+            "It will only be recorded once you approve it."
+        ),
+        "kind": "add_transaction",
+        "payload": payload,
+        "timestamp": datetime.utcnow().isoformat(),
+    }

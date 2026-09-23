@@ -22,6 +22,7 @@ from app.services.tools import (
     get_metrics, run_scenario, get_transactions, generate_report,
     update_metrics, add_transaction
 )
+from app.services.audit import record_tool_call, AGENT_ACTOR
 from app.services.context_builder import (
     build_financial_context, format_context_for_prompt, invalidate_context_cache
 )
@@ -209,6 +210,28 @@ def get_tool_definitions() -> list[dict]:
     ]
 
 
+_RAVEN_BLOCK_RE = None  # lazy — compiled on first use
+
+
+def _extract_raven_trailer(text: str) -> Optional[dict]:
+    """Parse the fenced ```raven JSON block emitted at the end of a Claude reply.
+
+    Never raises. Returns None when the block is missing or malformed.
+    """
+    global _RAVEN_BLOCK_RE
+    if _RAVEN_BLOCK_RE is None:
+        import re as _re
+        _RAVEN_BLOCK_RE = _re.compile(r"```raven\s*\n(.*?)\n```", _re.DOTALL)
+    match = _RAVEN_BLOCK_RE.search(text or "")
+    if not match:
+        return None
+    try:
+        parsed = json.loads(match.group(1))
+        return parsed if isinstance(parsed, dict) else None
+    except json.JSONDecodeError:
+        return None
+
+
 async def execute_tool(
     tool_name: str,
     tool_input: dict,
@@ -216,55 +239,84 @@ async def execute_tool(
     user_id: str,
     supabase_url: Optional[str] = None,
     supabase_key: Optional[str] = None,
+    conversation_id: Optional[str] = None,
 ) -> dict:
-    """Execute a tool and return results."""
-    try:
-        if tool_name == "get_metrics":
-            return await get_metrics(db, user_id, supabase_url, supabase_key)
+    """Execute a tool and return results, recording an audit entry.
 
-        elif tool_name == "get_transactions":
-            limit = tool_input.get("limit", 20)
-            category = tool_input.get("category")
-            return {
-                "transactions": await get_transactions(db, user_id, limit, category),
-                "count": len(await get_transactions(db, user_id, limit, category)),
-            }
+    Every tool invocation lands one row in agent_actions with actor=agent:claude,
+    linked to the conversation. Audit failures never break the caller.
+    """
+    async with record_tool_call(
+        actor=AGENT_ACTOR,
+        user_id=user_id,
+        tool_name=tool_name,
+        input=tool_input,
+        conversation_id=conversation_id,
+    ) as rec:
+        try:
+            if tool_name == "get_metrics":
+                result = await get_metrics(db, user_id, supabase_url, supabase_key)
 
-        elif tool_name == "run_scenario":
-            metrics = await get_metrics(db, user_id, supabase_url, supabase_key)
-            description = tool_input.get("description", "Unnamed scenario")
-            adjustments = {k: v for k, v in tool_input.items() if k != "description"}
-            return await run_scenario(metrics, description, adjustments)
+            elif tool_name == "get_transactions":
+                limit = tool_input.get("limit", 20)
+                category = tool_input.get("category")
+                txns = await get_transactions(db, user_id, limit, category)
+                result = {"transactions": txns, "count": len(txns)}
 
-        elif tool_name == "generate_report":
-            report_type = tool_input.get("report_type", "summary")
-            return await generate_report(db, user_id, report_type)
+            elif tool_name == "run_scenario":
+                metrics = await get_metrics(db, user_id, supabase_url, supabase_key)
+                description = tool_input.get("description", "Unnamed scenario")
+                adjustments = {k: v for k, v in tool_input.items() if k != "description"}
+                result = await run_scenario(metrics, description, adjustments)
 
-        elif tool_name == "update_metrics":
-            if not supabase_url or not supabase_key:
-                return {"error": "Supabase credentials not configured"}
-            return await update_metrics(supabase_url, supabase_key, user_id, tool_input)
+            elif tool_name == "generate_report":
+                report_type = tool_input.get("report_type", "summary")
+                result = await generate_report(db, user_id, report_type)
 
-        elif tool_name == "add_transaction":
-            if not supabase_url or not supabase_key:
-                return {"error": "Supabase credentials not configured"}
-            return await add_transaction(supabase_url, supabase_key, user_id, tool_input)
+            elif tool_name == "update_metrics":
+                # update_metrics now goes through the proposal service; it no longer
+                # needs supabase creds passed in here (see services/proposals.py).
+                result = await update_metrics(
+                    supabase_url or "",
+                    supabase_key or "",
+                    user_id,
+                    tool_input,
+                    conversation_id=conversation_id,
+                    reason=tool_input.get("_reason"),
+                )
 
-        elif tool_name == "seed_demo_data":
-            if not supabase_url or not supabase_key:
-                return {"error": "Supabase credentials not configured"}
-            return await seed_demo_data(supabase_url, supabase_key, user_id)
+            elif tool_name == "add_transaction":
+                result = await add_transaction(
+                    supabase_url or "",
+                    supabase_key or "",
+                    user_id,
+                    tool_input,
+                    conversation_id=conversation_id,
+                    reason=tool_input.get("_reason"),
+                )
 
-        elif tool_name == "clear_demo_data":
-            if not supabase_url or not supabase_key:
-                return {"error": "Supabase credentials not configured"}
-            return await clear_demo_data(supabase_url, supabase_key, user_id)
+            elif tool_name == "seed_demo_data":
+                if not supabase_url or not supabase_key:
+                    result = {"error": "Supabase credentials not configured"}
+                else:
+                    result = await seed_demo_data(supabase_url, supabase_key, user_id)
 
-        else:
-            return {"error": f"Unknown tool: {tool_name}"}
+            elif tool_name == "clear_demo_data":
+                if not supabase_url or not supabase_key:
+                    result = {"error": "Supabase credentials not configured"}
+                else:
+                    result = await clear_demo_data(supabase_url, supabase_key, user_id)
 
-    except Exception as e:
-        return {"error": f"Tool execution error: {str(e)}"}
+            else:
+                result = {"error": f"Unknown tool: {tool_name}"}
+
+            rec.set_output(result)
+            return result
+
+        except Exception as e:
+            err = {"error": f"Tool execution error: {str(e)}"}
+            rec.set_output(err)
+            return err
 
 
 async def stream_chat(
@@ -484,17 +536,29 @@ async def stream_chat_with_tools(
 
                 # If no tool use, we're done
                 if not has_tool_use:
-                    # Extract suggestions from response if present
-                    if "suggestions" in text_content.lower():
-                        # Simple heuristic: look for JSON in the text
-                        import re
-                        json_match = re.search(r'\[.*?\]', text_content, re.DOTALL)
-                        if json_match:
-                            try:
-                                suggestions = json.loads(json_match.group())
-                                yield f'data: {json.dumps({"type": "suggestions", "chips": suggestions})}\n\n'
-                            except json.JSONDecodeError:
-                                pass
+                    # Parse the structured ```raven trailer (see system_prompt.py).
+                    # It carries citations (transaction ids + metric labels) and
+                    # follow-up suggestions the founder UI renders as chips.
+                    trailer = _extract_raven_trailer(text_content)
+                    if trailer:
+                        citations = trailer.get("citations") or {}
+                        if citations:
+                            yield f'data: {json.dumps({"type": "citations", "citations": citations})}\n\n'
+                        follow_ups = trailer.get("follow_ups") or []
+                        if follow_ups:
+                            yield f'data: {json.dumps({"type": "suggestions", "chips": follow_ups})}\n\n'
+                    else:
+                        # Backwards-compat: old prompt shipped a raw JSON array
+                        # at the tail; keep supporting it while models catch up.
+                        if "suggestions" in text_content.lower():
+                            import re
+                            json_match = re.search(r'\[.*?\]', text_content, re.DOTALL)
+                            if json_match:
+                                try:
+                                    suggestions = json.loads(json_match.group())
+                                    yield f'data: {json.dumps({"type": "suggestions", "chips": suggestions})}\n\n'
+                                except json.JSONDecodeError:
+                                    pass
 
                     yield f'data: {json.dumps({"type": "done"})}\n\n'
                     break
@@ -513,10 +577,13 @@ async def stream_chat_with_tools(
                         tool_input = block.get("input", {})
                         tool_use_id = block.get("id")
 
-                        # Execute the tool
+                        # Execute the tool (audit-logged and, for writes,
+                        # funnelled through the proposal service so nothing
+                        # touches transactions/metrics without human approval).
                         result = await execute_tool(
                             tool_name, tool_input, db, user.id,
-                            supabase_url, supabase_key
+                            supabase_url, supabase_key,
+                            conversation_id=conversation_id,
                         )
 
                         # Emit tool result as card

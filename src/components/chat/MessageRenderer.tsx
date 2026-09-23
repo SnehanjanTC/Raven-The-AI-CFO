@@ -3,6 +3,8 @@ import { motion } from 'framer-motion';
 import ReactMarkdown from 'react-markdown';
 import { ThumbsUp, ThumbsDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { CitationChips, stripRavenTrailer } from './CitationChips';
+import type { Citations } from '@/services/claude';
 
 // Lazy-load card components to reduce initial bundle and improve performance
 const MetricsCard = lazy(() => import('../cards/MetricsCard').then(m => ({ default: m.MetricsCard })));
@@ -33,6 +35,7 @@ interface ChatMessage {
     type: string;
     [key: string]: any;
   };
+  citations?: Citations;
 }
 
 interface MessageRendererProps {
@@ -195,7 +198,9 @@ export const MessageRenderer: React.FC<MessageRendererProps> = ({ message, onCar
             : 'bg-white/[0.04] border border-white/[0.06] text-slate-300'
         )}
       >
-        {/* Markdown content */}
+        {/* Markdown content — for assistant messages we hide the raw
+            ```raven trailer so founders only see the human-readable answer;
+            the parsed citations render as chips below. */}
         {message.content && (
           <div className="prose prose-invert prose-sm max-w-none">
             {isUser ? (
@@ -238,10 +243,15 @@ export const MessageRenderer: React.FC<MessageRendererProps> = ({ message, onCar
                   ),
                 }}
               >
-                {message.content}
+                {stripRavenTrailer(message.content)}
               </ReactMarkdown>
             )}
           </div>
+        )}
+
+        {/* Citations — clickable chips linking to the sources the AI used */}
+        {!isUser && message.citations && (
+          <CitationChips citations={message.citations} />
         )}
 
         {/* Card data rendering */}

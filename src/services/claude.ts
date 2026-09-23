@@ -8,10 +8,16 @@ interface ChatMessage {
   content: string;
 }
 
+export interface Citations {
+  transaction_ids?: string[];
+  metric_labels?: string[];
+}
+
 interface StreamCallbacks {
   onTextDelta?: (text: string) => void;
   onCard?: (cardType: string, data: any) => void;
   onSuggestions?: (chips: string[]) => void;
+  onCitations?: (citations: Citations) => void;
   onDone?: () => void;
   onError?: (error: Error) => void;
 }
@@ -87,6 +93,8 @@ export async function streamChat(
                 callbacks.onCard?.(event.card_type, event.data);
               } else if (event.type === 'suggestions' && event.chips) {
                 callbacks.onSuggestions?.(event.chips);
+              } else if (event.type === 'citations' && event.citations) {
+                callbacks.onCitations?.(event.citations);
               } else if (event.type === 'done') {
                 callbacks.onDone?.();
                 return; // Success
