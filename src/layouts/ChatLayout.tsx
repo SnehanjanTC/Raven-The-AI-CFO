@@ -8,6 +8,7 @@ import CSVUploader from '@/components/CSVUploader';
 import { ConversationList } from '@/components/ConversationList';
 import { useConversations, ConversationWithMessages } from '@/hooks/useConversations';
 import { useSession } from '@/hooks/useSession';
+import { ProposalDrawer } from '@/components/agent/ProposalDrawer';
 
 interface ChatLayoutProps {
   children: React.ReactNode;
@@ -194,6 +195,9 @@ export const ChatLayout: React.FC<ChatLayoutProps> = ({
 
           {/* Upload CSV + User Avatar (right) */}
           <div className="flex items-center gap-3 min-w-fit">
+          {/* Bell — pending agent proposals */}
+          <ProposalDrawer />
+
           {/* Upload CSV button */}
           <motion.button
             whileHover={{ scale: 1.02 }}

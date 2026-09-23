@@ -36,6 +36,10 @@ class Settings(BaseSettings):
     class Config:
         env_file = ".env"
         case_sensitive = True
+        # Ignore unrelated env vars (VITE_*, DISABLE_HMR, etc.) so a shared
+        # frontend/backend .env doesn't crash startup. Only affects vars
+        # NOT declared as Settings fields — backend fields are still parsed.
+        extra = "ignore"
 
 
 settings = Settings()

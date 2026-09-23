@@ -4,7 +4,7 @@
  */
 
 import { useState, useCallback, useRef } from 'react';
-import { streamChat } from '@/services/claude';
+import { streamChat, type Citations } from '@/services/claude';
 
 export interface ChatMessage {
   role: 'user' | 'assistant';
@@ -13,6 +13,7 @@ export interface ChatMessage {
     type: string;
     [key: string]: any;
   };
+  citations?: Citations;
 }
 
 export interface SuggestionChip {
@@ -142,6 +143,19 @@ export function useChat(options?: UseChatOptions): UseChatReturn {
 
           onSuggestions: (chips) => {
             setSuggestions(chips);
+          },
+
+          onCitations: (citations) => {
+            setMessages((prev) => {
+              const lastMsg = prev[prev.length - 1];
+              if (lastMsg && lastMsg.role === 'assistant') {
+                return [
+                  ...prev.slice(0, -1),
+                  { ...lastMsg, citations },
+                ];
+              }
+              return prev;
+            });
           },
 
           onDone: () => {

@@ -1,5 +1,8 @@
 from fastapi import APIRouter
-from app.api.v1.endpoints import auth, transactions, invoices, reports, dashboard, notifications, ai_proxy, chat, csv_upload, session, usage, company_profile
+from app.api.v1.endpoints import (
+    auth, transactions, invoices, reports, dashboard, notifications,
+    ai_proxy, chat, csv_upload, session, usage, company_profile, proposals,
+)
 
 api_router = APIRouter()
 api_router.include_router(auth.router, prefix="/auth", tags=["Auth"])
@@ -14,3 +17,4 @@ api_router.include_router(chat.router, prefix="/chat", tags=["Chat"])
 api_router.include_router(csv_upload.router, prefix="/csv", tags=["CSV"])
 api_router.include_router(session.router, prefix="/session", tags=["Session"])
 api_router.include_router(usage.router, prefix="/usage", tags=["Usage"])
+api_router.include_router(proposals.router, prefix="/agent/proposals", tags=["Agent Proposals"])
